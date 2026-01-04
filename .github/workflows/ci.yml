@@ -1,36 +1,14 @@
-# Manual-only CI workflow for Embeddenator subcrates
-# This workflow ONLY runs on manual dispatch to conserve CI resources
-# during the repo breakout phase.
-#
-# Future enhancements (post-stabilization):
-# - Add push triggers for main branch
-# - Add PR triggers
-# - Add scheduled nightly builds for testing/sid targets
-# - Add container-based tests (qcow2 for kernel, Docker/Podman for userspace)
-
-name: CI (Manual)
+name: CI
 
 on:
-  workflow_dispatch:
-    inputs:
-      run_tests:
-        description: 'Run tests'
-        required: false
-        default: true
-        type: boolean
-      run_clippy:
-        description: 'Run clippy lints'
-        required: false
-        default: true
-        type: boolean
-      run_fmt_check:
-        description: 'Check formatting'
-        required: false
-        default: true
-        type: boolean
+  push:
+    branches: [main, develop]
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
+  checks: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -38,29 +16,54 @@ env:
 
 jobs:
   build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt, clippy
-        
+          components: clippy, rustfmt
+      
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-        
+        with:
+          key: embeddenator-webpuppet
+      
       - name: Check formatting
-        if: ${{ inputs.run_fmt_check }}
-        run: cargo fmt --all -- --check
-        
-      - name: Clippy
-        if: ${{ inputs.run_clippy }}
+        run: cargo fmt --check
+      
+      - name: Clippy lints
         run: cargo clippy --all-targets --all-features -- -D warnings
-        
+      
       - name: Build
-        run: cargo build --all-features --verbose
-        
+        run: cargo build --all-features
+      
       - name: Run tests
-        if: ${{ inputs.run_tests }}
         run: cargo test --all-features --verbose
+
+  # Optional: runs on self-hosted ARM64 runner if available
+  build-arm64:
+    name: Build (ARM64)
+    runs-on: [self-hosted, linux, arm64]
+    if: github.repository_owner == 'tzervas'
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+      
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: embeddenator-webpuppet-arm64
+      
+      - name: Build
+        run: cargo build --all-features
+      
+      - name: Run tests
+        run: cargo test --all-features
