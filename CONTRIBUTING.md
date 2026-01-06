@@ -1,28 +1,130 @@
-# Contributing to This Project
+# Contributing to embeddenator-webpuppet
 
-Thank you for your interest in contributing!
+Thank you for your interest in contributing to embeddenator-webpuppet! This document provides guidelines for contributing to the project.
 
 ## Development Setup
 
-1. Clone the repository
-2. Ensure you have Rust 1.84+ installed
-3. Run `cargo build` to build
-4. Run `cargo test` to run tests
+### Prerequisites
+- Rust 1.70+ (latest stable recommended)
+- Chrome/Chromium browser for testing
+- Git for version control
+
+### Setup
+1. Fork and clone the repository
+2. Install dependencies: `cargo build`
+3. Run tests: `cargo test`
+4. Run security checks: `cargo audit && cargo deny check`
+
+## Code Standards
+
+### Commit Messages
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+type(scope): description
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+- `feat`: New features
+- `fix`: Bug fixes  
+- `docs`: Documentation changes
+- `style`: Code formatting (no logic changes)
+- `refactor`: Code restructuring (no feature changes)
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+- `security`: Security-related changes
+
+**Examples:**
+```
+feat(providers): add Claude file upload support
+fix(session): resolve authentication timeout issues
+docs: update installation instructions
+security(deps): update vulnerable dependencies
+```
+
+### Branch Naming
+Follow this pattern: `type/description-in-kebab-case`
+
+**Examples:**
+- `feat/add-conversation-branching`
+- `fix/session-recovery-bug`
+- `docs/api-documentation-update`
+- `refactor/provider-trait-simplification`
+
+### Code Style
+- Use `rustfmt` for formatting: `cargo fmt`
+- Use `clippy` for linting: `cargo clippy`
+- Write documentation for all public APIs
+- Include examples in documentation where helpful
+- Follow Rust naming conventions
 
 ## Pull Request Process
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run `cargo fmt` and `cargo clippy`
-5. Submit a pull request
+### Before Submitting
+1. Ensure all tests pass: `cargo test`
+2. Run security checks: `cargo audit && cargo deny check`
+3. Format code: `cargo fmt`
+4. Check for lint issues: `cargo clippy`
+5. Update documentation if needed
+6. Add tests for new functionality
 
-## Code Style
+### PR Guidelines
+- Use a clear, descriptive title
+- Reference related issues: `Closes #123`
+- Provide a detailed description of changes
+- Include testing instructions if applicable
+- Keep changes focused and atomic
 
-- Use `cargo fmt` for formatting
-- No clippy warnings (`cargo clippy -- -D warnings`)
-- Add tests for new functionality
-- Update documentation as needed
+### Review Process
+- All PRs require review before merging
+- Address all review feedback
+- Maintain a clean commit history
+- Ensure CI checks pass
+
+## Security
+
+### Reporting Security Issues
+- **Do not** create public issues for security vulnerabilities
+- Email security reports to: [security contact needed]
+- Include detailed reproduction steps
+- Allow time for response before public disclosure
+
+### Security Guidelines
+- All user input must be validated and sanitized
+- Credentials must never be logged or stored in plaintext
+- Follow secure coding practices
+- Regular dependency updates and audits
+- Implement appropriate rate limiting
+
+## Testing
+
+### Test Categories
+- **Unit tests**: Test individual components
+- **Integration tests**: Test component interactions  
+- **End-to-end tests**: Test complete user workflows
+- **Security tests**: Test security controls and validation
+
+### Test Requirements
+- New features must include tests
+- Bug fixes should include regression tests
+- Tests must be reliable and deterministic
+- Use descriptive test names and assertions
+
+### Running Tests
+```bash
+# Run all tests
+cargo test
+
+# Run specific test category
+cargo test --test integration
+
+# Run with output
+cargo test -- --nocapture
+```
 
 ## License
 
