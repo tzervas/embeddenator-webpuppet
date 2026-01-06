@@ -133,10 +133,7 @@ impl BrowserDetector {
         ];
 
         // Find executable
-        let executable = linux_paths
-            .iter()
-            .map(PathBuf::from)
-            .find(|p| p.exists());
+        let executable = linux_paths.iter().map(PathBuf::from).find(|p| p.exists());
 
         // Find user data dir
         let user_data_dir = linux_data_dirs
@@ -184,10 +181,7 @@ impl BrowserDetector {
             dirs::home_dir().map(|d| d.join(".config/google-chrome")),
         ];
 
-        let executable = linux_paths
-            .iter()
-            .map(PathBuf::from)
-            .find(|p| p.exists());
+        let executable = linux_paths.iter().map(PathBuf::from).find(|p| p.exists());
 
         let user_data_dir = linux_data_dirs
             .iter()
@@ -221,10 +215,7 @@ impl BrowserDetector {
             dirs::home_dir().map(|d| d.join(".config/chromium")),
         ];
 
-        let executable = linux_paths
-            .iter()
-            .map(PathBuf::from)
-            .find(|p| p.exists());
+        let executable = linux_paths.iter().map(PathBuf::from).find(|p| p.exists());
 
         let user_data_dir = linux_data_dirs
             .iter()
@@ -258,10 +249,7 @@ impl BrowserDetector {
             dirs::home_dir().map(|d| d.join(".config/microsoft-edge")),
         ];
 
-        let executable = linux_paths
-            .iter()
-            .map(PathBuf::from)
-            .find(|p| p.exists());
+        let executable = linux_paths.iter().map(PathBuf::from).find(|p| p.exists());
 
         let user_data_dir = linux_data_dirs
             .iter()

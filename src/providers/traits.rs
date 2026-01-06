@@ -74,8 +74,8 @@ impl Provider {
         }
     }
 
-    /// Parse provider from string.
-    pub fn from_str(s: &str) -> Option<Self> {
+    /// Parse provider from string (use parse() method instead for FromStr trait).
+    pub fn from_string(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             #[cfg(feature = "grok")]
             "grok" | "xai" | "x" => Some(Provider::Grok),
@@ -143,6 +143,14 @@ impl Provider {
             #[cfg(feature = "grok")]
             Provider::Grok, // 128k
         ]
+    }
+}
+
+impl std::str::FromStr for Provider {
+    type Err = String;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        Self::from_string(s).ok_or_else(|| format!("Unknown provider: {}", s))
     }
 }
 

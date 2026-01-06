@@ -48,7 +48,7 @@ impl RateLimiter {
     /// Wait until a request is allowed for the given provider.
     pub async fn wait(&self, provider: Provider) {
         let delay = self.calculate_delay(provider);
-        
+
         if delay > Duration::ZERO {
             tracing::debug!(
                 "Rate limiting: waiting {:?} before request to {}",
@@ -106,7 +106,7 @@ impl RateLimiter {
         // Add jitter
         let jitter_range = (self.config.max_delay - self.config.min_delay).as_millis() as u64;
         let jitter_max = jitter_range * self.config.jitter_percent as u64 / 100;
-        
+
         if jitter_max > 0 {
             let jitter = fastrand::u64(0..jitter_max);
             base_delay + Duration::from_millis(jitter)
@@ -119,7 +119,7 @@ impl RateLimiter {
     fn record_request(&self, provider: Provider) {
         let mut state = self.state.lock();
         let provider_state = state.entry(provider).or_insert_with(RateLimitState::new);
-        
+
         let now = Instant::now();
         provider_state.requests.push(now);
         provider_state.last_request = Some(now);

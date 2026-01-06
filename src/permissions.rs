@@ -394,10 +394,7 @@ impl PermissionPolicy {
             allowed_operations,
             denied_operations,
             allowed_domains: HashSet::new(), // Allow all domains
-            blocked_url_patterns: vec![
-                r".*delete.*account.*".into(),
-                r".*close.*account.*".into(),
-            ],
+            blocked_url_patterns: vec![r".*delete.*account.*".into(), r".*close.*account.*".into()],
             max_risk_level: 7,
             default_deny: false,
             audit_enabled: true,
@@ -588,10 +585,7 @@ impl PermissionGuard {
     fn check_operation(&self, operation: Operation, url: Option<&str>) -> PermissionDecision {
         // 1. Check explicit deny (highest priority)
         if self.policy.denied_operations.contains(&operation) {
-            return PermissionDecision::deny(
-                operation,
-                "Operation explicitly denied by policy",
-            );
+            return PermissionDecision::deny(operation, "Operation explicitly denied by policy");
         }
 
         // 2. Check risk level
@@ -610,15 +604,21 @@ impl PermissionGuard {
         if let Some(url) = url {
             // Enforce HTTPS-only navigation/requests in secure mode.
             if url.trim_start().to_lowercase().starts_with("http://") {
-                return PermissionDecision::deny(operation, "Insecure URL scheme http:// is not allowed")
-                    .with_url(url);
+                return PermissionDecision::deny(
+                    operation,
+                    "Insecure URL scheme http:// is not allowed",
+                )
+                .with_url(url);
             }
 
             // Check blocked URL substrings (fast)
             for blocked in &self.policy.blocked_url_substrings {
                 if url.to_lowercase().contains(&blocked.to_lowercase()) {
-                    return PermissionDecision::deny(operation, format!("URL contains blocked pattern: {}", blocked))
-                        .with_url(url);
+                    return PermissionDecision::deny(
+                        operation,
+                        format!("URL contains blocked pattern: {}", blocked),
+                    )
+                    .with_url(url);
                 }
             }
 
@@ -633,9 +633,11 @@ impl PermissionGuard {
             // Check allowed domains (if not empty)
             if !self.policy.allowed_domains.is_empty() {
                 let domain = extract_domain(url);
-                let is_allowed = self.policy.allowed_domains.iter().any(|d| {
-                    domain == *d || domain.ends_with(&format!(".{}", d))
-                });
+                let is_allowed = self
+                    .policy
+                    .allowed_domains
+                    .iter()
+                    .any(|d| domain == *d || domain.ends_with(&format!(".{}", d)));
 
                 if !is_allowed {
                     return PermissionDecision::deny(
@@ -665,7 +667,8 @@ impl PermissionGuard {
         }
 
         // 6. Allow by default (permissive mode)
-        let mut decision = PermissionDecision::allow(operation, "Operation allowed (permissive mode)");
+        let mut decision =
+            PermissionDecision::allow(operation, "Operation allowed (permissive mode)");
         if let Some(url) = url {
             decision = decision.with_url(url);
         }
@@ -737,9 +740,10 @@ fn extract_domain(url_str: &str) -> String {
             return host.to_string();
         }
     }
-    
+
     // Fallback for relative or malformed URLs
-    url_str.trim_start_matches("https://")
+    url_str
+        .trim_start_matches("https://")
         .trim_start_matches("http://")
         .split('/')
         .next()
@@ -771,26 +775,34 @@ mod tests {
         let guard = PermissionGuard::secure();
 
         // Allowed domain
-        assert!(guard
-            .check_with_url(Operation::Navigate, "https://claude.ai/chat")
-            .allowed);
+        assert!(
+            guard
+                .check_with_url(Operation::Navigate, "https://claude.ai/chat")
+                .allowed
+        );
 
         // Blocked domain
-        assert!(!guard
-            .check_with_url(Operation::Navigate, "https://evil.com/phishing")
-            .allowed);
+        assert!(
+            !guard
+                .check_with_url(Operation::Navigate, "https://evil.com/phishing")
+                .allowed
+        );
     }
 
     #[test]
     fn test_https_only_policy() {
         let guard = PermissionGuard::secure();
 
-        assert!(!guard
-            .check_with_url(Operation::Navigate, "http://claude.ai/chat")
-            .allowed);
-        assert!(guard
-            .check_with_url(Operation::Navigate, "https://claude.ai/chat")
-            .allowed);
+        assert!(
+            !guard
+                .check_with_url(Operation::Navigate, "http://claude.ai/chat")
+                .allowed
+        );
+        assert!(
+            guard
+                .check_with_url(Operation::Navigate, "https://claude.ai/chat")
+                .allowed
+        );
     }
 
     #[test]
@@ -798,12 +810,16 @@ mod tests {
         let guard = PermissionGuard::secure();
 
         // Should be blocked
-        assert!(!guard
-            .check_with_url(Operation::Navigate, "https://claude.ai/settings/delete")
-            .allowed);
-        assert!(!guard
-            .check_with_url(Operation::Navigate, "https://x.com/billing")
-            .allowed);
+        assert!(
+            !guard
+                .check_with_url(Operation::Navigate, "https://claude.ai/settings/delete")
+                .allowed
+        );
+        assert!(
+            !guard
+                .check_with_url(Operation::Navigate, "https://x.com/billing")
+                .allowed
+        );
     }
 
     #[test]
@@ -822,7 +838,9 @@ mod tests {
             .max_risk_level(7)
             .build();
 
-        assert!(policy.allowed_operations.contains(&Operation::ExecuteScript));
+        assert!(policy
+            .allowed_operations
+            .contains(&Operation::ExecuteScript));
         assert!(policy.allowed_domains.contains("custom.example.com"));
         assert_eq!(policy.max_risk_level, 7);
     }

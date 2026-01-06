@@ -3,8 +3,8 @@
 //! These tests require a browser to be installed and optionally authenticated.
 
 use embeddenator_webpuppet::{
-    BrowserDetector, ContentScreener, InterventionDetector, InterventionReason,
-    Operation, PermissionGuard, PermissionPolicy,
+    BrowserDetector, ContentScreener, InterventionDetector, InterventionReason, Operation,
+    PermissionGuard, PermissionPolicy,
 };
 
 // ============================================================================
@@ -117,23 +117,33 @@ fn test_url_domain_restrictions() {
     let guard = PermissionGuard::new(PermissionPolicy::secure());
 
     // Allowed domains
-    assert!(guard
-        .check_with_url(Operation::Navigate, "https://claude.ai/chat")
-        .allowed);
-    assert!(guard
-        .check_with_url(Operation::Navigate, "https://x.com/i/grok")
-        .allowed);
-    assert!(guard
-        .check_with_url(Operation::Navigate, "https://gemini.google.com")
-        .allowed);
+    assert!(
+        guard
+            .check_with_url(Operation::Navigate, "https://claude.ai/chat")
+            .allowed
+    );
+    assert!(
+        guard
+            .check_with_url(Operation::Navigate, "https://x.com/i/grok")
+            .allowed
+    );
+    assert!(
+        guard
+            .check_with_url(Operation::Navigate, "https://gemini.google.com")
+            .allowed
+    );
 
     // Restricted domains
-    assert!(!guard
-        .check_with_url(Operation::Navigate, "https://evil.com/phishing")
-        .allowed);
-    assert!(!guard
-        .check_with_url(Operation::Navigate, "https://random-site.com")
-        .allowed);
+    assert!(
+        !guard
+            .check_with_url(Operation::Navigate, "https://evil.com/phishing")
+            .allowed
+    );
+    assert!(
+        !guard
+            .check_with_url(Operation::Navigate, "https://random-site.com")
+            .allowed
+    );
 }
 
 #[test]
@@ -207,7 +217,11 @@ fn binary_search(arr: &[i32], target: i32) -> Option<usize> {
 ```";
 
     let result = screener.screen(safe_content);
-    assert!(result.passed, "Safe content should pass: {:?}", result.issues);
+    assert!(
+        result.passed,
+        "Safe content should pass: {:?}",
+        result.issues
+    );
 }
 
 #[test]
@@ -243,7 +257,7 @@ fn test_captcha_detection_patterns() {
         ),
         // Should detect - contains "hcaptcha"
         (r#"<div class="h-captcha" data-sitekey="abc"></div>"#, true),
-        // Should detect - contains "cloudflare"  
+        // Should detect - contains "cloudflare"
         (
             r#"<iframe src="https://challenges.cloudflare.com/"></iframe>"#,
             true,
@@ -273,16 +287,10 @@ fn test_2fa_detection_patterns() {
             r#"<div class="two-factor-auth">Enter your code</div>"#,
             true,
         ),
-        // Contains "verification code" 
-        (
-            r#"<input placeholder="Enter verification code">"#,
-            true,
-        ),
+        // Contains "verification code"
+        (r#"<input placeholder="Enter verification code">"#, true),
         // Contains "one-time"
-        (
-            r#"<input autocomplete="one-time-code" type="text">"#,
-            true,
-        ),
+        (r#"<input autocomplete="one-time-code" type="text">"#, true),
         // Should NOT detect
         (r#"<input name="username" type="text">"#, false),
     ];

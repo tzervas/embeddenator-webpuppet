@@ -4,12 +4,10 @@
 //!
 //! This uses the browser-based webpuppet system (already authenticated).
 
-use std::path::PathBuf;
 use std::io::Write;
+use std::path::PathBuf;
 
-use embeddenator_webpuppet::{
-    WebPuppet, Provider, PromptRequest, ScreeningConfig,
-};
+use embeddenator_webpuppet::{PromptRequest, Provider, ScreeningConfig, WebPuppet};
 
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -27,7 +25,7 @@ fn load_prompt(name: &str) -> Result<String, std::io::Error> {
         .parent()
         .unwrap()
         .join(".github/prompts");
-    
+
     let prompt_file = prompts_dir.join(format!("research-{}.prompt.md", name));
     std::fs::read_to_string(&prompt_file)
 }
@@ -45,14 +43,14 @@ fn parse_provider(s: &str) -> Option<Provider> {
 async fn main() -> anyhow::Result<()> {
     // Initialize logging
     tracing_subscriber::fmt::init();
-    
+
     let args: Vec<String> = std::env::args().collect();
-    
+
     // Parse args
     let mut provider = Provider::Claude;
     let mut prompt_name = "io-uring".to_string();
     let mut headless = true;
-    
+
     let mut i = 1;
     while i < args.len() {
         match args[i].as_str() {
@@ -85,18 +83,21 @@ async fn main() -> anyhow::Result<()> {
         }
         i += 1;
     }
-    
+
     println!("🔬 Research Runner");
     println!("   Provider: {}", provider);
     println!("   Prompt: {}", prompt_name);
     println!("   Headless: {}", headless);
     println!("");
-    
+
     // Load prompt
     let prompt_content = match load_prompt(&prompt_name) {
         Ok(content) => content,
         Err(e) => {
-            eprintln!("❌ Failed to load prompt 'research-{}.prompt.md': {}", prompt_name, e);
+            eprintln!(
+                "❌ Failed to load prompt 'research-{}.prompt.md': {}",
+                prompt_name, e
+            );
             eprintln!("");
             eprintln!("Available prompts in .github/prompts/:");
             eprintln!("  - io-uring");
@@ -107,9 +108,9 @@ async fn main() -> anyhow::Result<()> {
             return Err(e.into());
         }
     };
-    
+
     println!("📄 Loaded prompt ({} bytes)", prompt_content.len());
-    
+
     // Configure screening
     let screening_config = ScreeningConfig {
         detect_prompt_injection: true,
@@ -118,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
         risk_threshold: 0.8, // Slightly permissive for research
         ..Default::default()
     };
-    
+
     // Create puppet
     println!("🌐 Launching browser...");
     let puppet = WebPuppet::builder()
@@ -127,19 +128,18 @@ async fn main() -> anyhow::Result<()> {
         .with_screening_config(screening_config)
         .build()
         .await?;
-    
+
     // Check authentication
     println!("🔐 Checking authentication...");
     puppet.authenticate(provider).await?;
     println!("✅ Authenticated with {}", provider);
-    
+
     // Send prompt
     println!("📤 Sending research prompt...");
-    let (response, screening) = puppet.prompt_screened(
-        provider,
-        PromptRequest::new(prompt_content),
-    ).await?;
-    
+    let (response, screening) = puppet
+        .prompt_screened(provider, PromptRequest::new(prompt_content))
+        .await?;
+
     // Report screening results
     println!("");
     println!("🔒 Security Screening:");
@@ -151,7 +151,7 @@ async fn main() -> anyhow::Result<()> {
             println!("     - {:?}", issue);
         }
     }
-    
+
     // Save response
     let output_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -160,13 +160,13 @@ async fn main() -> anyhow::Result<()> {
         .unwrap()
         .join("docs/research/responses");
     std::fs::create_dir_all(&output_dir)?;
-    
+
     let timestamp = chrono::Utc::now().format("%Y%m%dT%H%M%SZ");
     let output_file = output_dir.join(format!(
         "{}_{}_research-{}.md",
         timestamp, provider, prompt_name
     ));
-    
+
     let mut file = std::fs::File::create(&output_file)?;
     writeln!(file, "# Research Response: {}", prompt_name)?;
     writeln!(file, "")?;
@@ -177,7 +177,7 @@ async fn main() -> anyhow::Result<()> {
     writeln!(file, "---")?;
     writeln!(file, "")?;
     writeln!(file, "{}", response.text)?;
-    
+
     println!("");
     println!("💾 Response saved to: {}", output_file.display());
     println!("");
@@ -190,9 +190,9 @@ async fn main() -> anyhow::Result<()> {
         println!("... ({} more characters)", response.text.len() - 500);
     }
     println!("─────────────────────────────────────────────");
-    
+
     // Cleanup
     puppet.close().await?;
-    
+
     Ok(())
 }

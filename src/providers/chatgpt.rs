@@ -78,8 +78,8 @@ impl ProviderTrait for ChatGptProvider {
             conversation: true,
             vision: true,
             file_upload: true,
-            code_execution: true, // Code interpreter
-            web_search: true,     // Browse with Bing
+            code_execution: true,       // Code interpreter
+            web_search: true,           // Browse with Bing
             max_context: Some(128_000), // GPT-4 Turbo context
             models: vec![
                 "gpt-4o".into(),
@@ -101,9 +101,7 @@ impl ProviderTrait for ChatGptProvider {
         }
 
         // Check for chat interface element
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -161,7 +159,7 @@ impl ProviderTrait for ChatGptProvider {
         if !request.attachments.is_empty() && self.config.file_input_selector.is_some() {
             let selector = self.config.file_input_selector.as_ref().unwrap();
             let mut paths = Vec::new();
-            
+
             for attachment in &request.attachments {
                 let temp_dir = std::env::temp_dir().join("webpuppet_uploads_chatgpt");
                 std::fs::create_dir_all(&temp_dir)?;
@@ -169,7 +167,7 @@ impl ProviderTrait for ChatGptProvider {
                 std::fs::write(&file_path, &attachment.data)?;
                 paths.push(file_path);
             }
-            
+
             session.upload_files(selector, &paths).await?;
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
@@ -217,7 +215,7 @@ impl ProviderTrait for ChatGptProvider {
 
         // Navigate to new chat URL
         session.navigate(&self.config.chat_url).await?;
-        
+
         Ok(uuid::Uuid::new_v4().to_string())
     }
 
@@ -264,7 +262,9 @@ impl ProviderTrait for ChatGptProvider {
 
     async fn wait_ready(&self, session: &Session) -> Result<()> {
         // Wait for the main chat interface to be ready
-        session.wait_for_element(&self.config.ready_selector, Duration::from_secs(30)).await?;
+        session
+            .wait_for_element(&self.config.ready_selector, Duration::from_secs(30))
+            .await?;
         Ok(())
     }
 }

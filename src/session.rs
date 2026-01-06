@@ -80,7 +80,7 @@ impl Session {
 
         // Find a browser to use
         let browser_install = Self::find_browser(config)?;
-        
+
         tracing::info!(
             "Using {} browser at {:?}",
             browser_install.browser_type,
@@ -127,7 +127,7 @@ impl Session {
         if !config.browser.sandbox {
             builder = builder.arg("--no-sandbox");
         }
-        
+
         for arg in &config.browser.args {
             builder = builder.arg(arg);
         }
@@ -166,7 +166,7 @@ impl Session {
 
         if config.browser.dual_head {
             tracing::info!("Dual Head mode enabled. Launching secondary monitoring browser.");
-            
+
             // Re-build config for secondary (visible) browser
             let mut sec_builder = BrowserConfig::builder()
                 .chrome_executable(&browser_install.executable_path)
@@ -189,17 +189,20 @@ impl Session {
             if !config.browser.sandbox {
                 sec_builder = sec_builder.arg("--no-sandbox");
             }
-            
+
             for arg in &config.browser.args {
                 sec_builder = sec_builder.arg(arg);
             }
 
-            let sec_config = sec_builder.build().map_err(|e| Error::Browser(e.to_string()))?;
+            let sec_config = sec_builder
+                .build()
+                .map_err(|e| Error::Browser(e.to_string()))?;
 
             // Launch secondary browser
-            let (sec_browser, mut sec_handler) = Browser::launch(sec_config)
-                .await
-                .map_err(|e| Error::Browser(format!("Failed to launch secondary browser: {}", e)))?;
+            let (sec_browser, mut sec_handler) =
+                Browser::launch(sec_config).await.map_err(|e| {
+                    Error::Browser(format!("Failed to launch secondary browser: {}", e))
+                })?;
 
             // Spawn handler task for secondary
             tokio::spawn(async move {
@@ -266,7 +269,7 @@ impl Session {
 
         // Auto-detect browsers
         let browsers = BrowserDetector::detect_all();
-        
+
         if browsers.is_empty() {
             return Err(Error::Browser(
                 "No supported browser found. Please install Brave, Chrome, or Chromium.".into(),
@@ -310,7 +313,7 @@ impl Session {
     /// Navigate to a URL.
     pub async fn navigate(&self, url: &str) -> Result<()> {
         tracing::info!("Navigating to: {}", url);
-        
+
         let page = self.page.read().await;
         page.goto(url)
             .await
@@ -321,10 +324,10 @@ impl Session {
             let sec_page = sec_page_lock.read().await;
             let _ = sec_page.goto(url).await;
         }
-        
+
         // Wait for page to stabilize
         tokio::time::sleep(Duration::from_millis(500)).await;
-        
+
         Ok(())
     }
 
@@ -340,7 +343,7 @@ impl Session {
     /// Wait for a URL to contain a substring.
     pub async fn wait_for_url_contains(&self, substring: &str, timeout: Duration) -> Result<()> {
         let start = std::time::Instant::now();
-        
+
         while start.elapsed() < timeout {
             let url = self.current_url().await?;
             if url.contains(substring) {
@@ -355,10 +358,10 @@ impl Session {
     /// Wait for an element to be present.
     pub async fn wait_for_element(&self, selector: &str, timeout: Duration) -> Result<Element> {
         tracing::debug!("Waiting for element: {}", selector);
-        
+
         let page = self.page.read().await;
         let start = std::time::Instant::now();
-        
+
         while start.elapsed() < timeout {
             if let Ok(element) = page.find_element(selector).await {
                 return Ok(element);
@@ -372,9 +375,9 @@ impl Session {
     /// Wait for an element to be hidden/removed.
     pub async fn wait_for_element_hidden(&self, selector: &str, timeout: Duration) -> Result<()> {
         tracing::debug!("Waiting for element to hide: {}", selector);
-        
+
         let start = std::time::Instant::now();
-        
+
         while start.elapsed() < timeout {
             if !self.element_exists(selector).await.unwrap_or(false) {
                 return Ok(());
@@ -397,81 +400,87 @@ impl Session {
     /// Click on an element.
     pub async fn click(&self, selector: &str) -> Result<()> {
         tracing::debug!("Clicking element: {}", selector);
-        
+
         let page = self.page.read().await;
         let element = page
             .find_element(selector)
             .await
             .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
-        
+
         element
             .click()
             .await
             .map_err(|e| Error::Browser(format!("Click failed: {}", e)))?;
-        
+
         tokio::time::sleep(Duration::from_millis(100)).await;
-        
+
         Ok(())
     }
 
     /// Type text into an element.
     pub async fn type_text(&self, selector: &str, text: &str) -> Result<()> {
         tracing::debug!("Typing text into: {}", selector);
-        
+
         let page = self.page.read().await;
         let element = page
             .find_element(selector)
             .await
             .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
-        
+
         // Click to focus
         element
             .click()
             .await
             .map_err(|e| Error::Browser(format!("Click to focus failed: {}", e)))?;
-        
+
         // Type the text
         element
             .type_str(text)
             .await
             .map_err(|e| Error::Browser(format!("Typing failed: {}", e)))?;
-        
+
         Ok(())
     }
 
     /// Upload files to an input element.
     pub async fn upload_files(&self, selector: &str, paths: &[PathBuf]) -> Result<()> {
         tracing::debug!("Uploading {} files to: {}", paths.len(), selector);
-        
+
         let page = self.page.read().await;
         let element = page
             .find_element(selector)
             .await
             .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
-        
-        let path_strs: Vec<String> = paths.iter()
-            .map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()).to_string_lossy().to_string())
+
+        let path_strs: Vec<String> = paths
+            .iter()
+            .map(|p| {
+                p.canonicalize()
+                    .unwrap_or_else(|_| p.clone())
+                    .to_string_lossy()
+                    .to_string()
+            })
             .collect();
-            
+
         use chromiumoxide::cdp::browser_protocol::dom::SetFileInputFilesParams;
-        
+
         let cmd = SetFileInputFilesParams::builder()
             .files(path_strs)
             .node_id(element.node_id)
             .build()
-            .map_err(|e| Error::Browser(e))?;
+            .map_err(Error::Browser)?;
 
         page.execute(cmd)
             .await
             .map_err(|e| Error::Browser(format!("File upload failed: {}", e)))?;
-            
+
         Ok(())
     }
 
     /// Press a key (e.g., "Enter", "Tab")
     pub async fn press_key(&self, key: &str) -> Result<()> {
         tracing::debug!("Pressing key: {}", key);
-        
+
         // Use JavaScript to simulate key press
         let script = format!(
             r#"
@@ -495,89 +504,105 @@ impl Session {
                 document.activeElement.dispatchEvent(upEvent);
             }})()
             "#,
-            key, key, key_code(key), key_code(key),
-            key, key, key_code(key), key_code(key)
+            key,
+            key,
+            key_code(key),
+            key_code(key),
+            key,
+            key,
+            key_code(key),
+            key_code(key)
         );
-        
+
         let page = self.page.read().await;
         page.evaluate(script)
             .await
             .map_err(|e| Error::Browser(format!("Key press failed: {}", e)))?;
-        
+
         Ok(())
     }
-    
+
     /// Save cookies for session persistence with encryption.
     pub async fn save_cookies(&self) -> Result<()> {
         let cookie_path = self.profile_dir.join("cookies.json.enc");
         tracing::debug!("Saving encrypted cookies to: {:?}", cookie_path);
-        
+
         let page = self.page.read().await;
         let cookies = page
             .get_cookies()
             .await
             .map_err(|e| Error::Browser(format!("Failed to get cookies: {}", e)))?;
-        
+
         let json = serde_json::to_string(&cookies)
             .map_err(|e| Error::Internal(format!("Failed to serialize cookies: {}", e)))?;
 
         // Encrypt the cookies
         let master_key = self.get_encryption_key()?;
         let encryption = DataEncryption::new(&master_key, b"static_salt_for_cookies");
-        let encrypted = encryption.encrypt(json.as_bytes())
+        let encrypted = encryption
+            .encrypt(json.as_bytes())
             .map_err(|e| Error::Internal(format!("Encryption failed: {}", e)))?;
 
         std::fs::write(cookie_path, encrypted)?;
-        
+
         Ok(())
     }
 
     /// Load cookies from previous session.
     pub async fn load_cookies(&self) -> Result<()> {
         let cookie_path = self.profile_dir.join("cookies.json.enc");
-        
+
         if cookie_path.exists() {
             tracing::debug!("Loading encrypted cookies from: {:?}", cookie_path);
             let encrypted = std::fs::read(&cookie_path)?;
-            
+
             let master_key = self.get_encryption_key()?;
             let encryption = DataEncryption::new(&master_key, b"static_salt_for_cookies");
-            
-            let decrypted = encryption.decrypt(&encrypted)
+
+            let decrypted = encryption
+                .decrypt(&encrypted)
                 .map_err(|e| Error::Internal(format!("Decryption failed: {}", e)))?;
-            
-            let cookies: Vec<chromiumoxide::cdp::browser_protocol::network::Cookie> = 
-                serde_json::from_slice(&decrypted)
-                .map_err(|e| Error::Internal(format!("Failed to deserialize cookies: {}", e)))?;
+
+            let cookies: Vec<chromiumoxide::cdp::browser_protocol::network::Cookie> =
+                serde_json::from_slice(&decrypted).map_err(|e| {
+                    Error::Internal(format!("Failed to deserialize cookies: {}", e))
+                })?;
 
             // Convert Cookie to CookieParam for set_cookies
             use chromiumoxide::cdp::browser_protocol::network::CookieParam;
-            let cookie_params: Vec<CookieParam> = cookies.into_iter().map(|c| {
-                let json = serde_json::to_value(&c).unwrap();
-                serde_json::from_value(json).unwrap()
-            }).collect();
+            let cookie_params: Vec<CookieParam> = cookies
+                .into_iter()
+                .map(|c| {
+                    let json = serde_json::to_value(&c).unwrap();
+                    serde_json::from_value(json).unwrap()
+                })
+                .collect();
 
             let page = self.page.read().await;
             page.set_cookies(cookie_params)
                 .await
                 .map_err(|e| Error::Browser(format!("Failed to set cookies: {}", e)))?;
         }
-        
+
         Ok(())
     }
 
     /// Helper to get or create an encryption key for this session.
     fn get_encryption_key(&self) -> Result<String> {
-        match self.credentials.get(self.provider, "cookie_encryption_key")? {
+        match self
+            .credentials
+            .get(self.provider, "cookie_encryption_key")?
+        {
             Some(key) => Ok(key),
             None => {
                 let new_key = uuid::Uuid::new_v4().to_string();
-                self.credentials.store(self.provider, "cookie_encryption_key", &new_key)?;
+                self.credentials
+                    .store(self.provider, "cookie_encryption_key", &new_key)?;
                 Ok(new_key)
             }
         }
     }
-    
+
     /// Get text content of an element handle (for compatibility with provider code).
     pub async fn get_text_content(&self, element: &Element) -> Result<String> {
         element
@@ -590,7 +615,7 @@ impl Session {
     /// Query all elements matching a selector.
     pub async fn query_all(&self, selector: &str) -> Result<Vec<Element>> {
         tracing::debug!("Querying all: {}", selector);
-        
+
         let page = self.page.read().await;
         page.find_elements(selector)
             .await
@@ -604,7 +629,7 @@ impl Session {
             .find_element(selector)
             .await
             .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
-        
+
         element
             .inner_text()
             .await
@@ -619,7 +644,7 @@ impl Session {
             .find_element(selector)
             .await
             .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
-        
+
         element
             .inner_html()
             .await
@@ -640,7 +665,7 @@ impl Session {
     /// Take a screenshot.
     pub async fn screenshot(&self, path: Option<&std::path::Path>) -> Result<Vec<u8>> {
         tracing::debug!("Taking screenshot");
-        
+
         let page = self.page.read().await;
         let screenshot = page
             .screenshot(
@@ -650,11 +675,11 @@ impl Session {
             )
             .await
             .map_err(|e| Error::Browser(format!("Screenshot failed: {}", e)))?;
-        
+
         if let Some(path) = path {
             std::fs::write(path, &screenshot)?;
         }
-        
+
         Ok(screenshot)
     }
 

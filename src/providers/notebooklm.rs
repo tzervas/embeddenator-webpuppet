@@ -42,10 +42,7 @@ impl NotebookLmProvider {
     async fn wait_for_response(&self, session: &Session) -> Result<()> {
         // NotebookLM shows loading while generating
         session
-            .wait_for_element_hidden(
-                r#"div[data-testid="loading"]"#,
-                Duration::from_secs(120),
-            )
+            .wait_for_element_hidden(r#"div[data-testid="loading"]"#, Duration::from_secs(120))
             .await
             .map_err(|_| Error::Timeout(120_000))?;
 
@@ -78,10 +75,10 @@ impl ProviderTrait for NotebookLmProvider {
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities {
             conversation: true,
-            vision: false, // Works with uploaded docs, not images
+            vision: false,     // Works with uploaded docs, not images
             file_upload: true, // Primary feature - source uploads
             code_execution: false,
-            web_search: false, // Searches within uploaded sources only
+            web_search: false,          // Searches within uploaded sources only
             max_context: Some(500_000), // Very large context for source analysis
             models: vec!["notebooklm".into()],
         }
@@ -96,9 +93,7 @@ impl ProviderTrait for NotebookLmProvider {
         }
 
         // Check for NotebookLM interface
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -152,9 +147,11 @@ impl ProviderTrait for NotebookLmProvider {
                 let mut paths = Vec::new();
                 for attachment in &request.attachments {
                     let temp_dir = std::env::temp_dir().join("webpuppet_uploads_notebooklm");
-                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::create_dir_all(&temp_dir)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     let file_path = temp_dir.join(&attachment.name);
-                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::write(&file_path, &attachment.data)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     paths.push(file_path);
                 }
 
@@ -162,7 +159,9 @@ impl ProviderTrait for NotebookLmProvider {
                 // Give NotebookLM a moment to process the upload
                 tokio::time::sleep(Duration::from_secs(3)).await;
             } else {
-                tracing::warn!("NotebookLM provider does not have a file input selector configured");
+                tracing::warn!(
+                    "NotebookLM provider does not have a file input selector configured"
+                );
             }
         }
 
@@ -233,7 +232,9 @@ impl ProviderTrait for NotebookLmProvider {
 
     async fn wait_ready(&self, session: &Session) -> Result<()> {
         // Wait for the notebook interface to be ready
-        session.wait_for_element(&self.config.ready_selector, Duration::from_secs(30)).await?;
+        session
+            .wait_for_element(&self.config.ready_selector, Duration::from_secs(30))
+            .await?;
         Ok(())
     }
 }

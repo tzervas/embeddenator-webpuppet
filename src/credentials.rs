@@ -39,7 +39,7 @@ impl CredentialStore {
     /// Store a credential for a provider.
     pub fn store(&self, provider: Provider, key: &str, value: &str) -> Result<()> {
         let entry_name = format!("{}:{}", provider.name(), key);
-        
+
         // Try to store in OS keyring
         #[cfg(feature = "keyring")]
         {
@@ -52,7 +52,8 @@ impl CredentialStore {
 
         // Also cache in memory (encrypted)
         let encryption = self.get_encryption();
-        let encrypted = encryption.encrypt(value.as_bytes())
+        let encrypted = encryption
+            .encrypt(value.as_bytes())
             .map_err(|e| Error::Internal(format!("Memory encryption failed: {}", e)))?;
 
         let mut cache = self.cache.write().unwrap();
@@ -70,7 +71,8 @@ impl CredentialStore {
             let cache = self.cache.read().unwrap();
             if let Some(encrypted) = cache.get(&entry_name) {
                 let encryption = self.get_encryption();
-                let decrypted = encryption.decrypt(encrypted)
+                let decrypted = encryption
+                    .decrypt(encrypted)
                     .map_err(|e| Error::Internal(format!("Memory decryption failed: {}", e)))?;
                 return Ok(Some(String::from_utf8(decrypted).unwrap()));
             }
@@ -81,14 +83,15 @@ impl CredentialStore {
         {
             let entry = keyring::Entry::new(SERVICE_NAME, &entry_name)
                 .map_err(|e| Error::Credential(e.to_string()))?;
-            
+
             match entry.get_password() {
                 Ok(value) => {
                     // Cache for future use (encrypted)
                     let encryption = self.get_encryption();
-                    let encrypted = encryption.encrypt(value.as_bytes())
+                    let encrypted = encryption
+                        .encrypt(value.as_bytes())
                         .map_err(|e| Error::Internal(format!("Memory encryption failed: {}", e)))?;
-                    
+
                     let mut cache = self.cache.write().unwrap();
                     cache.insert(entry_name, encrypted);
                     return Ok(Some(value));
@@ -117,7 +120,7 @@ impl CredentialStore {
         {
             let entry = keyring::Entry::new(SERVICE_NAME, &entry_name)
                 .map_err(|e| Error::Credential(e.to_string()))?;
-            
+
             // Ignore NoEntry error (already deleted)
             match entry.delete_credential() {
                 Ok(_) | Err(keyring::Error::NoEntry) => {}
@@ -132,13 +135,13 @@ impl CredentialStore {
     pub fn has_credentials(&self, provider: Provider) -> bool {
         // Check for common credential keys
         let keys = ["session_token", "auth_cookie", "refresh_token"];
-        
+
         for key in keys {
             if self.get(provider, key).ok().flatten().is_some() {
                 return true;
             }
         }
-        
+
         false
     }
 
@@ -179,9 +182,8 @@ impl CredentialStore {
         provider: Provider,
         key: &str,
     ) -> Result<Option<secrecy::SecretString>> {
-        self.get(provider, key).map(|opt| {
-            opt.map(|s| secrecy::SecretString::new(s.into()))
-        })
+        self.get(provider, key)
+            .map(|opt| opt.map(|s| secrecy::SecretString::new(s.into())))
     }
 }
 
@@ -198,14 +200,16 @@ mod tests {
     #[test]
     fn test_credential_store_cache() {
         let store = CredentialStore::new().unwrap();
-        
+
         // Store should work with in-memory cache
-        store.store(Provider::Claude, "test_key", "test_value").unwrap();
-        
+        store
+            .store(Provider::Claude, "test_key", "test_value")
+            .unwrap();
+
         // Retrieval should work
         let value = store.get(Provider::Claude, "test_key").unwrap();
         assert_eq!(value, Some("test_value".to_string()));
-        
+
         // Delete should work
         store.delete(Provider::Claude, "test_key").unwrap();
         let value = store.get(Provider::Claude, "test_key").unwrap();

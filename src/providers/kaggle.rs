@@ -30,12 +30,18 @@ impl KaggleProvider {
     async fn wait_ready_inner(&self, session: &Session) -> Result<()> {
         // Kaggle is SPA-ish; content can be async.
         // We keep this intentionally loose to avoid brittle selectors.
-        session.wait_for_element("body", Duration::from_secs(30)).await?;
+        session
+            .wait_for_element("body", Duration::from_secs(30))
+            .await?;
         tokio::time::sleep(Duration::from_millis(750)).await;
         Ok(())
     }
 
-    async fn extract_dataset_links(&self, session: &Session, limit: usize) -> Result<Vec<(String, String)>> {
+    async fn extract_dataset_links(
+        &self,
+        session: &Session,
+        limit: usize,
+    ) -> Result<Vec<(String, String)>> {
         #[derive(serde::Deserialize)]
         struct LinkItem {
             title: String,
@@ -79,7 +85,9 @@ impl KaggleProvider {
             return results;
         })()"#;
 
-        let mut items: Vec<LinkItem> = session.evaluate(script).await
+        let mut items: Vec<LinkItem> = session
+            .evaluate(script)
+            .await
             .map_err(|e| Error::ExtractionFailed(e.to_string()))?;
 
         // De-dupe and cap.
@@ -157,7 +165,11 @@ impl ProviderTrait for KaggleProvider {
         Ok(())
     }
 
-    async fn send_prompt(&self, session: &Session, request: &PromptRequest) -> Result<PromptResponse> {
+    async fn send_prompt(
+        &self,
+        session: &Session,
+        request: &PromptRequest,
+    ) -> Result<PromptResponse> {
         let query = request.message.trim();
         if query.is_empty() {
             return Err(Error::Config("Kaggle search query is empty".into()));
@@ -202,7 +214,10 @@ impl ProviderTrait for KaggleProvider {
 
     async fn extract_response(&self, session: &Session) -> Result<String> {
         // Best-effort: return the page title plus URL.
-        let title = session.get_title().await.unwrap_or_else(|_| "Kaggle".into());
+        let title = session
+            .get_title()
+            .await
+            .unwrap_or_else(|_| "Kaggle".into());
         let url = session.current_url().await.unwrap_or_default();
         Ok(format!("{}\n{}", title, url))
     }

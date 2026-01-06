@@ -76,16 +76,12 @@ impl ProviderTrait for PerplexityProvider {
     fn capabilities(&self) -> ProviderCapabilities {
         ProviderCapabilities {
             conversation: true,
-            vision: false, // Perplexity doesn't support image input in free tier
+            vision: false,     // Perplexity doesn't support image input in free tier
             file_upload: true, // Pro tier supports files
             code_execution: false,
             web_search: true, // Primary feature - real-time search
             max_context: Some(32_000),
-            models: vec![
-                "default".into(),
-                "sonar-pro".into(),
-                "sonar".into(),
-            ],
+            models: vec!["default".into(), "sonar-pro".into(), "sonar".into()],
         }
     }
 
@@ -98,9 +94,7 @@ impl ProviderTrait for PerplexityProvider {
         }
 
         // Check for search input
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -151,9 +145,11 @@ impl ProviderTrait for PerplexityProvider {
                 let mut paths = Vec::new();
                 for attachment in &request.attachments {
                     let temp_dir = std::env::temp_dir().join("webpuppet_uploads_perplexity");
-                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::create_dir_all(&temp_dir)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     let file_path = temp_dir.join(&attachment.name);
-                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::write(&file_path, &attachment.data)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     paths.push(file_path);
                 }
 
@@ -161,7 +157,9 @@ impl ProviderTrait for PerplexityProvider {
                 // Give Perplexity a moment to process the upload
                 tokio::time::sleep(Duration::from_secs(2)).await;
             } else {
-                tracing::warn!("Perplexity provider does not have a file input selector configured");
+                tracing::warn!(
+                    "Perplexity provider does not have a file input selector configured"
+                );
             }
         }
 
@@ -253,7 +251,9 @@ impl ProviderTrait for PerplexityProvider {
 
     async fn wait_ready(&self, session: &Session) -> Result<()> {
         // Wait for the search interface to be ready
-        session.wait_for_element(&self.config.ready_selector, Duration::from_secs(30)).await?;
+        session
+            .wait_for_element(&self.config.ready_selector, Duration::from_secs(30))
+            .await?;
         Ok(())
     }
 }

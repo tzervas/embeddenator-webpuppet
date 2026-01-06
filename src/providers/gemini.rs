@@ -70,8 +70,8 @@ impl ProviderTrait for GeminiProvider {
             conversation: true,
             vision: true,
             file_upload: true,
-            code_execution: true, // Gemini can execute code in sandbox
-            web_search: true,     // Gemini has web access
+            code_execution: true,         // Gemini can execute code in sandbox
+            web_search: true,             // Gemini has web access
             max_context: Some(1_000_000), // Gemini 1.5 Pro has 1M context
             models: vec![
                 "gemini-1.5-pro".into(),
@@ -90,9 +90,7 @@ impl ProviderTrait for GeminiProvider {
         }
 
         // Check for Gemini interface
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -169,9 +167,11 @@ impl ProviderTrait for GeminiProvider {
                 let mut paths = Vec::new();
                 for attachment in &request.attachments {
                     let temp_dir = std::env::temp_dir().join("webpuppet_uploads_gemini");
-                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::create_dir_all(&temp_dir)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     let file_path = temp_dir.join(&attachment.name);
-                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::write(&file_path, &attachment.data)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     paths.push(file_path);
                 }
 
@@ -213,7 +213,7 @@ impl ProviderTrait for GeminiProvider {
     async fn new_conversation(&self, session: &Session) -> Result<String> {
         // Click "New chat" button
         let new_chat_selector = r#"button[aria-label="New chat"]"#;
-        
+
         if session.element_exists(new_chat_selector).await? {
             session.click(new_chat_selector).await.ok();
         } else {
@@ -230,7 +230,7 @@ impl ProviderTrait for GeminiProvider {
         let url = session.current_url().await?;
         let conversation_id = url
             .split('/')
-            .last()
+            .next_back()
             .filter(|s| !s.is_empty() && *s != "app")
             .map(|s| s.to_string())
             .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
@@ -246,7 +246,7 @@ impl ProviderTrait for GeminiProvider {
     ) -> Result<PromptResponse> {
         // Check if URL contains conversation ID
         let url = session.current_url().await?;
-        
+
         if !url.contains(conversation_id) {
             // Navigate to conversation
             // Note: Gemini may not support direct conversation URLs

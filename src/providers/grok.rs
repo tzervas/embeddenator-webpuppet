@@ -70,12 +70,9 @@ impl ProviderTrait for GrokProvider {
             vision: true,
             file_upload: true, // Grok supports file uploads
             code_execution: false,
-            web_search: true, // Grok has real-time web access
+            web_search: true,           // Grok has real-time web access
             max_context: Some(128_000), // Grok 2 has 128k context
-            models: vec![
-                "grok-2".into(),
-                "grok-2-mini".into(),
-            ],
+            models: vec!["grok-2".into(), "grok-2-mini".into()],
         }
     }
 
@@ -88,9 +85,7 @@ impl ProviderTrait for GrokProvider {
         }
 
         // Check for Grok interface element
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -165,9 +160,11 @@ impl ProviderTrait for GrokProvider {
                 let mut paths = Vec::new();
                 for attachment in &request.attachments {
                     let temp_dir = std::env::temp_dir().join("webpuppet_uploads_grok");
-                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::create_dir_all(&temp_dir)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     let file_path = temp_dir.join(&attachment.name);
-                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    std::fs::write(&file_path, &attachment.data)
+                        .map_err(|e| Error::Browser(e.to_string()))?;
                     paths.push(file_path);
                 }
 
@@ -295,7 +292,7 @@ mod tests {
         assert!(caps.conversation);
         assert!(caps.vision);
         assert!(caps.web_search); // Grok has real-time access
-        assert!(!caps.file_upload);
+        assert!(caps.file_upload); // Grok supports file uploads
         assert_eq!(caps.max_context, Some(128_000));
     }
 
