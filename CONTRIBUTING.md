@@ -5,8 +5,9 @@ Thank you for your interest in contributing to embeddenator-webpuppet! This docu
 ## Development Setup
 
 ### Prerequisites
-- Rust 1.70+ (latest stable recommended)
-- Chrome/Chromium browser for testing
+- Rust 1.75+ (latest stable recommended)
+- Chrome 120+, Chromium 120+, or Brave 1.60+ for testing
+- Modern operating system (Linux, macOS 13+, Windows 11 22H2+)
 - Git for version control
 
 ### Setup
@@ -14,6 +15,26 @@ Thank you for your interest in contributing to embeddenator-webpuppet! This docu
 2. Install dependencies: `cargo build`
 3. Run tests: `cargo test`
 4. Run security checks: `cargo audit && cargo deny check`
+
+## Platform Support
+
+This project focuses on modern platforms and environments:
+
+**Operating Systems (Minimum Versions):**
+- Linux: Ubuntu 22.04 LTS, Fedora 38, RHEL 9, Debian 12, or equivalent
+- macOS: 13.0 Ventura or later
+- Windows: 11 22H2 or later
+
+**Browser Requirements:**
+- Chrome/Chromium: 120+
+- Brave: 1.60+
+- Edge: 120+ (Windows/macOS)
+
+**Development Environment:**
+- Rust: 1.75+ (uses latest stable features)
+- Node.js: 20+ (if using JavaScript tooling)
+
+We intentionally do not support legacy platforms to focus development resources on modern, secure environments.
 
 ## Code Standards
 
