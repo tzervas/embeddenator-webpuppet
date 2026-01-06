@@ -39,7 +39,7 @@ tokio = { version = "=1.49.0", features = ["full"] }
 futures = "=0.3.31"
 
 # HTTP and networking - use rustls to avoid OpenSSL dep
-reqwest = { version = "=0.12.28", default-features = false, features = ["json", "cookies", "rustls-tls"] }
+reqwest = { version = "=0.13.1", default-features = false, features = ["json", "cookies", "rustls-tls"] }
 
 # Serialization
 serde = { version = "=1.0.228", features = ["derive"] }
