@@ -6,6 +6,25 @@
 
 ---
 
+## Platform Strategy
+
+**Target Platforms (Modern Focus):**
+- Linux: Ubuntu 22.04+, Fedora 38+, RHEL 9+, Debian 12+
+- macOS: 13.0 Ventura+ (Intel and Apple Silicon)
+- Windows: 11 22H2+ (x64 and ARM64)
+
+**Browser Support:**
+- Chrome/Chromium 120+
+- Brave 1.60+
+- Edge 120+
+
+**Rust Version Policy:**
+- MSRV: 1.75.0 (current stable at time of writing)
+- Policy: Update MSRV quarterly to stay within 6 months of latest
+- Focus: Leverage modern Rust features for better performance and security
+
+---
+
 ## Phase 1: Core Reliability & Stability 🔧
 **Timeline: 2-3 weeks**
 

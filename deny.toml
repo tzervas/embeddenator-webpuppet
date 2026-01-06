@@ -60,7 +60,8 @@ no-default-features = false
 feature-depth = 1
 
 [advisories]
-# Stricter advisory handling - no ignored advisories for production security
+# MAXIMUM SECURITY: Zero tolerance for any security advisories
+# All vulnerabilities and unsound practices must be addressed immediately
 ignore = []
 # If this is true, then cargo deny will use the git executable to fetch advisory database.
 # If this is false, then it uses a built-in git library.
@@ -86,11 +87,10 @@ allow = [
     "MPL-2.0",
     "CDLA-Permissive-2.0",
 ]
-# The confidence threshold for detecting a license from license text.
-# The higher the value, the more closely the license text must be to the
-# canonical license text of a valid SPDX license file.
+# SECURITY: Higher confidence threshold for license detection
+# Require exact license matching to prevent license confusion attacks
 # [possible values: any between 0.0 and 1.0].
-confidence-threshold = 0.8
+confidence-threshold = 0.95
 # Allow 1 or more licenses on a per-crate basis, so that particular licenses
 # aren't accepted for every possible crate as with the normal allow list
 exceptions = [
@@ -147,14 +147,27 @@ workspace-default-features = "allow"
 # The default lint level for `default` features for external crates
 external-default-features = "allow"
 
-# High-risk crates that should be banned for security/compliance reasons
+# MAXIMUM SECURITY: Comprehensive banned crates and versions
 deny = [
-    # Known problematic crates
+    # System TLS libraries - enforce pure Rust crypto
     { crate = "openssl@0.10", reason = "Use rustls instead for better security and no system dependencies" },
     { crate = "native-tls", reason = "Use rustls-tls feature instead for reproducible builds" },
-    # Yanked/vulnerable versions of common crates
+    { crate = "security-framework", reason = "Use rustls instead of macOS system crypto" },
+    
+    # Vulnerable/problematic versions - STRICT version requirements
     { crate = "chrono@<0.4.20", reason = "Contains potential segfault vulnerabilities" },
     { crate = "regex@<1.5.5", reason = "Contains ReDoS vulnerabilities" },
+    { crate = "time@<0.3.5", reason = "Contains segfault vulnerabilities" },
+    { crate = "url@<2.2.2", reason = "Contains URL parsing vulnerabilities" },
+    { crate = "serde_json@<1.0.85", reason = "Contains parsing vulnerabilities" },
+    
+    # Crypto-related security requirements
+    { crate = "ring@<0.16.20", reason = "Require latest cryptographic implementations" },
+    { crate = "rustls@<0.21.0", reason = "Enforce modern TLS versions and security" },
+    
+    # Web security
+    { crate = "hyper@<0.14.18", reason = "Contains HTTP/2 security issues" },
+    { crate = "reqwest@<0.11.18", reason = "Contains request smuggling protections" },
 ]
 
 # List of features to allow/deny

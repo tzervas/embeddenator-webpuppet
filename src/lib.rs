@@ -2,8 +2,8 @@
 //!
 //! Browser automation library for AI provider web interfaces.
 //!
-//! This crate provides programmatic control of Chrome/Chromium browsers to interact 
-//! with AI chat providers through their web UIs. It handles authentication, session 
+//! This crate provides programmatic control of Chrome/Chromium browsers to interact
+//! with AI chat providers through their web UIs. It handles authentication, session
 //! management, and response extraction for research and development workflows.
 //!
 //! ## Features
@@ -72,7 +72,7 @@ pub use intervention::{
     InterventionConfig, InterventionDetector, InterventionHandler, InterventionReason,
     InterventionState,
 };
-pub use permissions::{Operation, PermissionGuard, PermissionPolicy, PermissionDecision};
+pub use permissions::{Operation, PermissionDecision, PermissionGuard, PermissionPolicy};
 pub use providers::{Provider, ProviderTrait};
 pub use puppet::{PromptRequest, PromptResponse, WebPuppet};
 pub use ratelimit::RateLimiter;

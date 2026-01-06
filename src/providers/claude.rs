@@ -43,7 +43,7 @@ impl ClaudeProvider {
             .wait_for_element_hidden("div.cursor-blink", Duration::from_secs(120))
             .await
             .map_err(|_| Error::Timeout(120_000))?;
-        
+
         // Additional wait for response stabilization
         tokio::time::sleep(Duration::from_millis(500)).await;
         Ok(())
@@ -81,16 +81,14 @@ impl ProviderTrait for ClaudeProvider {
     async fn is_authenticated(&self, session: &Session) -> Result<bool> {
         // Check for the presence of the chat input, which indicates logged in
         let url = session.current_url().await?;
-        
+
         // If we're on the login page, not authenticated
         if url.contains("/login") {
             return Ok(false);
         }
 
         // Check for chat input element
-        session
-            .element_exists(&self.config.input_selector)
-            .await
+        session.element_exists(&self.config.input_selector).await
     }
 
     async fn authenticate(&self, session: &mut Session) -> Result<()> {
@@ -142,7 +140,7 @@ impl ProviderTrait for ClaudeProvider {
         if !request.attachments.is_empty() && self.config.file_input_selector.is_some() {
             let selector = self.config.file_input_selector.as_ref().unwrap();
             let mut paths = Vec::new();
-            
+
             for attachment in &request.attachments {
                 let temp_dir = std::env::temp_dir().join("webpuppet_uploads");
                 std::fs::create_dir_all(&temp_dir)?;
@@ -150,9 +148,9 @@ impl ProviderTrait for ClaudeProvider {
                 std::fs::write(&file_path, &attachment.data)?;
                 paths.push(file_path);
             }
-            
+
             session.upload_files(selector, &paths).await?;
-            
+
             // Wait for upload to complete (indicator)
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
@@ -211,11 +209,7 @@ impl ProviderTrait for ClaudeProvider {
 
         // Extract conversation ID from URL
         let url = session.current_url().await?;
-        let conversation_id = url
-            .split('/')
-            .last()
-            .unwrap_or("unknown")
-            .to_string();
+        let conversation_id = url.split('/').next_back().unwrap_or("unknown").to_string();
 
         Ok(conversation_id)
     }
@@ -275,7 +269,7 @@ impl ProviderTrait for ClaudeProvider {
     async fn check_rate_limit(&self, session: &Session) -> Result<Option<Duration>> {
         // Check for rate limit message
         let rate_limit_selector = "div[data-testid='rate-limit-message']";
-        
+
         if session.element_exists(rate_limit_selector).await? {
             // Claude typically shows "Please wait before sending another message"
             // Default to 60 second wait
@@ -294,7 +288,7 @@ mod tests {
     fn test_claude_capabilities() {
         let provider = ClaudeProvider::new();
         let caps = provider.capabilities();
-        
+
         assert!(caps.conversation);
         assert!(caps.vision);
         assert!(caps.file_upload);

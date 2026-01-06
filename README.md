@@ -311,9 +311,13 @@ embeddenator-webpuppet/
 
 ## System Requirements
 
-- **Browser**: Chrome, Chromium, or Brave (auto-detected)
-- **Operating System**: Linux, macOS, or Windows
-- **Keyring**: OS-level credential storage support
+- **Rust**: 1.75.0 or newer (latest stable recommended)
+- **Browser**: Chrome 120+, Chromium 120+, or Brave 1.60+ (auto-detected)
+- **Operating Systems**:
+  - **Linux**: Modern distributions (Ubuntu 22.04+, Fedora 38+, Arch Linux current)
+  - **macOS**: 13.0 Ventura or newer (Intel/Apple Silicon)
+  - **Windows**: Windows 11 22H2 or newer
+- **Keyring**: OS-native credential storage (keyring, Keychain, Windows Credential Manager)
 - **Container Support**: Available with `--no-sandbox` configuration
 
 ## Troubleshooting

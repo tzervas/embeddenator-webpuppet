@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 /// Main configuration for WebPuppet.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Config {
     /// Browser configuration.
     pub browser: BrowserConfig,
@@ -15,17 +15,6 @@ pub struct Config {
     pub session: SessionConfig,
     /// Rate limiting settings.
     pub rate_limit: RateLimitConfig,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            browser: BrowserConfig::default(),
-            providers: ProvidersConfig::default(),
-            session: SessionConfig::default(),
-            rate_limit: RateLimitConfig::default(),
-        }
-    }
 }
 
 /// Browser-specific configuration.
@@ -374,8 +363,8 @@ impl Config {
 
     /// Save configuration to file.
     pub fn save(&self, path: &std::path::Path) -> crate::Result<()> {
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| crate::Error::Config(e.to_string()))?;
+        let content =
+            toml::to_string_pretty(self).map_err(|e| crate::Error::Config(e.to_string()))?;
         std::fs::write(path, content)?;
         Ok(())
     }

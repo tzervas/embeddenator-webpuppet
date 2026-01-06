@@ -298,7 +298,10 @@ impl InterventionHandler {
     }
 
     /// Request human intervention.
-    pub async fn request_intervention(&self, reason: InterventionReason) -> Result<InterventionComplete> {
+    pub async fn request_intervention(
+        &self,
+        reason: InterventionReason,
+    ) -> Result<InterventionComplete> {
         // Update state
         *self.state.write() = InterventionState::WaitingForHuman;
         *self.current_reason.write() = Some(reason.clone());
@@ -320,18 +323,21 @@ impl InterventionHandler {
 
         // Wait for completion or timeout
         let start = Instant::now();
-        
-        // Take the receiver
-        let mut rx_guard = self.complete_rx.write();
-        let rx = rx_guard.take();
-        drop(rx_guard);
+
+        // Take the receiver (async-safe approach)
+        let rx = {
+            let mut rx_guard = self.complete_rx.write();
+            rx_guard.take()
+        };
 
         if let Some(mut rx) = rx {
             let result = tokio::select! {
                 complete = rx.recv() => {
-                    // Put receiver back
-                    *self.complete_rx.write() = Some(rx);
-                    
+                    // Put receiver back in a separate scope
+                    {
+                        *self.complete_rx.write() = Some(rx);
+                    }
+
                     match complete {
                         Some(c) => {
                             *self.state.write() = InterventionState::Resuming;
@@ -352,7 +358,7 @@ impl InterventionHandler {
                 _ = tokio::time::sleep(self.config.timeout) => {
                     // Put receiver back
                     *self.complete_rx.write() = Some(rx);
-                    
+
                     *self.state.write() = InterventionState::TimedOut;
                     tracing::error!(
                         timeout_secs = self.config.timeout.as_secs(),
@@ -670,7 +676,10 @@ mod tests {
 
         let html_limited = r#"<div>Too many requests. Please try again later.</div>"#;
         let reason = detector.detect_rate_limit(html_limited);
-        assert!(matches!(reason, Some(InterventionReason::RateLimited { .. })));
+        assert!(matches!(
+            reason,
+            Some(InterventionReason::RateLimited { .. })
+        ));
     }
 
     #[test]
@@ -703,7 +712,7 @@ mod tests {
 
         // Resume
         handler.resume();
-        
+
         // State should be resuming
         assert_eq!(handler.state(), InterventionState::Resuming);
     }

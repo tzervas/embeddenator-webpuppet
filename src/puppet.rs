@@ -14,20 +14,20 @@ use crate::ratelimit::RateLimiter;
 use crate::security::{ContentScreener, ScreeningConfig, ScreeningResult};
 use crate::session::Session;
 
+#[cfg(feature = "chatgpt")]
+use crate::providers::ChatGptProvider;
 #[cfg(feature = "claude")]
 use crate::providers::ClaudeProvider;
 #[cfg(feature = "gemini")]
 use crate::providers::GeminiProvider;
 #[cfg(feature = "grok")]
 use crate::providers::GrokProvider;
-#[cfg(feature = "chatgpt")]
-use crate::providers::ChatGptProvider;
-#[cfg(feature = "perplexity")]
-use crate::providers::PerplexityProvider;
-#[cfg(feature = "notebooklm")]
-use crate::providers::NotebookLmProvider;
 #[cfg(feature = "kaggle")]
 use crate::providers::KaggleProvider;
+#[cfg(feature = "notebooklm")]
+use crate::providers::NotebookLmProvider;
+#[cfg(feature = "perplexity")]
+use crate::providers::PerplexityProvider;
 
 /// Request to send to an AI provider.
 #[derive(Debug, Clone, Default)]
@@ -130,7 +130,10 @@ impl WebPuppet {
     ///
     /// Note: This is currently based on the provider implementation's static
     /// `capabilities()` declaration (not runtime UI detection).
-    pub fn provider_capabilities(&self, provider: Provider) -> Option<crate::providers::ProviderCapabilities> {
+    pub fn provider_capabilities(
+        &self,
+        provider: Provider,
+    ) -> Option<crate::providers::ProviderCapabilities> {
         self.providers.get(&provider).map(|p| p.capabilities())
     }
 
@@ -149,20 +152,22 @@ impl WebPuppet {
 
         // Create new session
         let session = Session::new(&self.config, provider, self.credentials.clone()).await?;
-        
+
         let mut sessions = self.sessions.write().await;
         sessions.insert(provider, session.clone());
-        
+
         Ok(session)
     }
 
     /// Authenticate with a provider.
     pub async fn authenticate(&self, provider: Provider) -> Result<()> {
-        let provider_impl = self.providers.get(&provider)
+        let provider_impl = self
+            .providers
+            .get(&provider)
             .ok_or_else(|| Error::UnsupportedProvider(provider.to_string()))?;
 
         let mut session = self.get_session(provider).await?;
-        
+
         if !provider_impl.is_authenticated(&session).await? {
             provider_impl.authenticate(&mut session).await?;
         }
@@ -176,7 +181,9 @@ impl WebPuppet {
         provider: Provider,
         request: PromptRequest,
     ) -> Result<PromptResponse> {
-        let provider_impl = self.providers.get(&provider)
+        let provider_impl = self
+            .providers
+            .get(&provider)
             .ok_or_else(|| Error::UnsupportedProvider(provider.to_string()))?;
 
         // Apply rate limiting
@@ -197,7 +204,9 @@ impl WebPuppet {
 
         // Send prompt
         let response = if let Some(ref conv_id) = request.conversation_id {
-            provider_impl.continue_conversation(&session, conv_id, &request).await?
+            provider_impl
+                .continue_conversation(&session, conv_id, &request)
+                .await?
         } else {
             provider_impl.send_prompt(&session, &request).await?
         };
@@ -218,23 +227,27 @@ impl WebPuppet {
         request: PromptRequest,
     ) -> Result<(PromptResponse, ScreeningResult)> {
         let mut response = self.prompt(provider, request).await?;
-        
+
         // Screen the response
         let screening = self.screener.screen(&response.text);
-        
+
         // Replace response text with sanitized version
         if !screening.passed {
             tracing::warn!(
                 "Response from {} flagged with risk score {:.2}: {:?}",
                 provider,
                 screening.risk_score,
-                screening.issues.iter().map(|i| format!("{:?}", i)).collect::<Vec<_>>()
+                screening
+                    .issues
+                    .iter()
+                    .map(|i| format!("{:?}", i))
+                    .collect::<Vec<_>>()
             );
         }
-        
+
         // Use sanitized text
         response.text = screening.sanitized.clone();
-        
+
         Ok((response, screening))
     }
 
@@ -244,7 +257,7 @@ impl WebPuppet {
         request: PromptRequest,
     ) -> Result<(PromptResponse, ScreeningResult)> {
         let providers = self.providers();
-        
+
         if providers.is_empty() {
             return Err(Error::Config("No providers configured".into()));
         }
@@ -271,7 +284,7 @@ impl WebPuppet {
     /// Send a prompt to the best available provider.
     pub async fn prompt_any(&self, request: PromptRequest) -> Result<PromptResponse> {
         let providers = self.providers();
-        
+
         if providers.is_empty() {
             return Err(Error::Config("No providers configured".into()));
         }
@@ -293,7 +306,9 @@ impl WebPuppet {
 
     /// Start a new conversation with a provider.
     pub async fn new_conversation(&self, provider: Provider) -> Result<String> {
-        let provider_impl = self.providers.get(&provider)
+        let provider_impl = self
+            .providers
+            .get(&provider)
             .ok_or_else(|| Error::UnsupportedProvider(provider.to_string()))?;
 
         let session = self.get_session(provider).await?;
@@ -411,7 +426,7 @@ impl WebPuppetBuilder {
         let screener = Arc::new(
             self.screening_config
                 .map(ContentScreener::with_config)
-                .unwrap_or_default()
+                .unwrap_or_default(),
         );
 
         Ok(WebPuppet {
@@ -437,12 +452,10 @@ pub async fn quick_prompt(
         .await?;
 
     puppet.authenticate(provider).await?;
-    
-    let response = puppet
-        .prompt(provider, PromptRequest::new(message))
-        .await?;
+
+    let response = puppet.prompt(provider, PromptRequest::new(message)).await?;
 
     puppet.close().await?;
-    
+
     Ok(response)
 }
