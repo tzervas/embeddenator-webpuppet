@@ -48,7 +48,7 @@ toml = "=0.8.23"
 humantime-serde = "=1.1.1"
 
 # Error handling
-thiserror = "=1.0.69"
+thiserror = "=2.0.17"
 anyhow = "=1.0.100"
 
 # Logging
