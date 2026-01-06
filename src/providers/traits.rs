@@ -1,6 +1,7 @@
 //! Provider trait definitions for AI web UI automation.
 
 use async_trait::async_trait;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use crate::error::Result;
@@ -8,7 +9,7 @@ use crate::puppet::{PromptRequest, PromptResponse};
 use crate::session::Session;
 
 /// Supported AI providers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Provider {
     /// Grok by X.ai (Twitter/X).
     #[cfg(feature = "grok")]

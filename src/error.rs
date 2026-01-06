@@ -111,6 +111,10 @@ pub enum Error {
     /// Internal error.
     #[error("internal error: {0}")]
     Internal(String),
+
+    /// Security error.
+    #[error("security error: {0}")]
+    Security(String),
 }
 
 impl Error {

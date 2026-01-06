@@ -54,6 +54,7 @@
 
 pub mod browser;
 pub mod config;
+pub mod containerized;
 pub mod credentials;
 pub mod error;
 pub mod intervention;
@@ -61,11 +62,19 @@ pub mod permissions;
 pub mod providers;
 pub mod puppet;
 pub mod ratelimit;
+pub mod sanitization;
 pub mod security;
 pub mod session;
+pub mod secure_puppet;
+pub mod security_tests;
+pub mod homelab_ci;
 
 pub use browser::{BrowserDetector, BrowserInstallation, BrowserLaunchConfig, BrowserType};
 pub use config::Config;
+pub use containerized::{
+    ContainerizedConfig, ContainerizedExecutor, ContainerExecutionResult, 
+    ContainerSecurityPolicy, ResourceStats
+};
 pub use credentials::CredentialStore;
 pub use error::{Error, Result};
 pub use intervention::{
@@ -76,5 +85,20 @@ pub use permissions::{Operation, PermissionDecision, PermissionGuard, Permission
 pub use providers::{Provider, ProviderTrait};
 pub use puppet::{PromptRequest, PromptResponse, WebPuppet};
 pub use ratelimit::RateLimiter;
+pub use sanitization::{
+    SanitizationConfig, SanitizationResult, SanitizationIssue, 
+    SensitiveDataType, Sanitizer, ContainerConfig
+};
+pub use secure_puppet::{
+    SecureWebPuppet, SecurityConfig, SecurityEvent, SecurityEventType, 
+    SecurityAction, SecurePromptResponse, ExecutionMethod, SecurityStats
+};
 pub use security::{ContentScreener, ScreeningConfig, ScreeningResult, SecurityIssue};
+pub use security_tests::{
+    SecurityTestSuite, SecurityTestResult, SecurityReport, RiskLevel
+};
+pub use homelab_ci::{
+    HomelabCiCd, HomelabConfig, LoadTestConfig, NotificationConfig,
+    CiCdTestResult, PerformanceMetrics, LoadTestResults, CiCdStatus
+};
 pub use session::Session;

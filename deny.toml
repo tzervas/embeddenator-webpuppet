@@ -217,12 +217,26 @@ skip = [
     { crate = "rand_core@0.6", reason = "Crypto stack compatibility, both versions actively maintained" },
     { crate = "rand_chacha@0.3", reason = "Crypto stack compatibility, both versions actively maintained" },
     
+    # Thiserror version duplicates - chromiumoxide brings in 2.0 while we use 1.0
+    { crate = "thiserror@1.0", reason = "Legacy compatibility during chromiumoxide transition, both actively maintained" },
+    { crate = "thiserror@2.0", reason = "Chromiumoxide dependency, actively maintained" },
+    { crate = "thiserror-impl@1.0", reason = "Legacy compatibility during chromiumoxide transition" },
+    { crate = "thiserror-impl@2.0", reason = "Chromiumoxide dependency" },
+    
     # Windows-sys version spread - Microsoft maintained, low security risk
     # Risk assessment: LOW - All versions are Microsoft maintained with regular security updates
+    { crate = "windows-link@0.1", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-link@0.2", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-result@0.3", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-result@0.4", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-strings@0.4", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-strings@0.5", reason = "Windows registry compatibility, Microsoft maintained" },
+    { crate = "windows-sys@0.45", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },
     { crate = "windows-sys@0.48", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },
     { crate = "windows-sys@0.52", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },  
     { crate = "windows-sys@0.59", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },
     { crate = "windows-sys@0.60", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },
+    { crate = "windows-sys@0.61", reason = "Legacy compatibility, Microsoft maintained, regular security updates" },
     { crate = "windows-targets@0.48", reason = "Microsoft Windows toolchain, consistent maintainer" },
     { crate = "windows-targets@0.52", reason = "Microsoft Windows toolchain, consistent maintainer" },
     { crate = "windows-targets@0.53", reason = "Microsoft Windows toolchain, consistent maintainer" },

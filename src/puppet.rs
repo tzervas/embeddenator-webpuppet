@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
 use crate::config::Config;
@@ -73,7 +74,7 @@ impl PromptRequest {
 }
 
 /// File attachment for prompts.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attachment {
     /// File name.
     pub name: String,
@@ -84,7 +85,7 @@ pub struct Attachment {
 }
 
 /// Response from an AI provider.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PromptResponse {
     /// The response text.
     pub text: String,

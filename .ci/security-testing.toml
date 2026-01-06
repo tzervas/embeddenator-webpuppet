@@ -1,0 +1,91 @@
+//! CI/CD pipeline configuration for embeddenator-webpuppet security testing.
+//!
+//! This configuration enables automated security testing in the homelab environment
+//! with comprehensive threat simulation and validation.
+
+use std::collections::HashMap;
+
+[dependencies]
+# Core crate dependencies  
+tracing = { version = "0.1", default-features = false, features = ["std"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+parking_lot = "0.12"
+
+# Additional testing dependencies
+regex = "1.10"
+base64 = "0.21"
+url = "2.5"
+uuid = { version = "1.8", features = ["v4", "serde"] }
+
+[dev-dependencies]
+# Security testing dependencies
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.4"
+quickcheck = "1.0"
+lazy_static = "1.4"
+
+# Container and CI/CD dependencies  
+bollard = "0.15" # Docker API client
+k8s-openapi = "0.21" # Kubernetes support
+kube = { version = "0.88", features = ["runtime", "derive"] }
+tower = "0.4"
+
+# Performance monitoring
+sysinfo = "0.30"
+procfs = "0.16"
+
+# Notification dependencies
+reqwest = { version = "0.11", features = ["json"] }
+lettre = { version = "0.11", features = ["smtp-transport", "pool", "hostname", "builder"] }
+
+[[test]]
+name = "security_tests"
+path = "tests/security_tests.rs"
+required-features = ["security-testing"]
+
+[[test]]
+name = "integration_tests"  
+path = "tests/integration.rs"
+
+[[test]]
+name = "performance_tests"
+path = "tests/performance_tests.rs"
+required-features = ["performance-testing"]
+
+[[test]]
+name = "container_security_tests"
+path = "tests/container_security_tests.rs" 
+required-features = ["container-testing"]
+
+[[bench]]
+name = "sanitization_benchmark"
+harness = false
+required-features = ["benchmarks"]
+
+[[bench]]
+name = "containerized_benchmark"  
+harness = false
+required-features = ["benchmarks"]
+
+[features]
+default = ["security-testing"]
+
+# Security testing features
+security-testing = []
+container-testing = ["bollard", "k8s-openapi", "kube"]
+performance-testing = ["criterion", "sysinfo", "procfs"]
+benchmarks = ["criterion"]
+adversarial-testing = ["proptest", "quickcheck"]
+
+# CI/CD features
+homelab-ci = ["container-testing", "performance-testing"]
+notifications = ["reqwest", "lettre"]
+monitoring = ["sysinfo", "procfs"]
+
+# Development features
+debug-logging = ["tracing-subscriber/env-filter"]
+json-logging = ["tracing-subscriber/json"]
