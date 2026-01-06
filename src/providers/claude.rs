@@ -138,6 +138,25 @@ impl ProviderTrait for ClaudeProvider {
         self.navigate_to_chat(session).await?;
         self.wait_ready(session).await?;
 
+        // Handle attachments if any
+        if !request.attachments.is_empty() && self.config.file_input_selector.is_some() {
+            let selector = self.config.file_input_selector.as_ref().unwrap();
+            let mut paths = Vec::new();
+            
+            for attachment in &request.attachments {
+                let temp_dir = std::env::temp_dir().join("webpuppet_uploads");
+                std::fs::create_dir_all(&temp_dir)?;
+                let file_path = temp_dir.join(&attachment.name);
+                std::fs::write(&file_path, &attachment.data)?;
+                paths.push(file_path);
+            }
+            
+            session.upload_files(selector, &paths).await?;
+            
+            // Wait for upload to complete (indicator)
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+
         // Find and focus the input element
         session
             .click(&self.config.input_selector)

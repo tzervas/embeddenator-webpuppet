@@ -11,6 +11,67 @@
 //! - Encoded/obfuscated payloads
 
 use std::collections::HashSet;
+use aes_gcm::{
+    aead::{Aead, KeyInit, OsRng},
+    Aes256Gcm, Nonce,
+};
+use aes_gcm::aead::rand_core::RngCore;
+use secrecy::{Secret, ExposeSecret};
+use pbkdf2::pbkdf2_hmac;
+use sha2::Sha256;
+
+/// Helper for encrypting sensitive data like cookies.
+pub struct DataEncryption {
+    key: Secret<[u8; 32]>,
+}
+
+impl DataEncryption {
+    /// Create a new encryption helper using a passphrase and salt.
+    pub fn new(passphrase: &str, salt: &[u8]) -> Self {
+        let mut key = [0u8; 32];
+        pbkdf2_hmac::<Sha256>(passphrase.as_bytes(), salt, 100_000, &mut key);
+        Self { key: Secret::new(key) }
+    }
+
+    /// Encrypt data using AES-256-GCM.
+    pub fn encrypt(&self, plaintext: &[u8]) -> anyhow::Result<Vec<u8>> {
+        let cipher = Aes256Gcm::new_from_slice(self.key.expose_secret())
+            .map_err(|e| anyhow::anyhow!("Crypto error: {}", e))?;
+        
+        let mut nonce_bytes = [0u8; 12];
+        OsRng.fill_bytes(&mut nonce_bytes);
+        let nonce = Nonce::from_slice(&nonce_bytes);
+
+        let ciphertext = cipher
+            .encrypt(nonce, plaintext)
+            .map_err(|e| anyhow::anyhow!("Encryption failed: {}", e))?;
+
+        // Prepend nonce to ciphertext
+        let mut result = Vec::with_capacity(nonce_bytes.len() + ciphertext.len());
+        result.extend_from_slice(&nonce_bytes);
+        result.extend_from_slice(&ciphertext);
+        Ok(result)
+    }
+
+    /// Decrypt data using AES-256-GCM.
+    pub fn decrypt(&self, encrypted: &[u8]) -> anyhow::Result<Vec<u8>> {
+        if encrypted.len() < 12 {
+            return Err(anyhow::anyhow!("Invalid encrypted data"));
+        }
+
+        let cipher = Aes256Gcm::new_from_slice(self.key.expose_secret())
+            .map_err(|e| anyhow::anyhow!("Crypto error: {}", e))?;
+        
+        let (nonce_bytes, ciphertext) = encrypted.split_at(12);
+        let nonce = Nonce::from_slice(nonce_bytes);
+
+        let plaintext = cipher
+            .decrypt(nonce, ciphertext)
+            .map_err(|e| anyhow::anyhow!("Decryption failed: {}", e))?;
+
+        Ok(plaintext)
+    }
+}
 
 /// Result of content screening.
 #[derive(Debug, Clone)]
@@ -479,43 +540,35 @@ impl ContentScreener {
         issues
     }
 
-    /// Detect hidden HTML elements.
+    /// Detect hidden HTML elements using CSS analysis.
     fn detect_hidden_html_elements(&self, html: &str) -> Vec<SecurityIssue> {
         let mut issues = Vec::new();
+        use scraper::{Html, Selector};
 
-        // Check for inline styles that hide content
-        let hidden_patterns = [
-            (r#"display\s*:\s*none"#, "display:none"),
-            (r#"visibility\s*:\s*hidden"#, "visibility:hidden"),
-            (r#"opacity\s*:\s*0[^.]"#, "opacity:0"),
-            (r#"font-size\s*:\s*[0-5]px"#, "tiny font"),
-            (r#"font-size\s*:\s*[01]pt"#, "1pt font"),
-            (r#"color\s*:\s*transparent"#, "transparent color"),
-            (r#"position\s*:\s*absolute[^>]*left\s*:\s*-\d{4,}"#, "off-screen positioning"),
-            (r#"height\s*:\s*0[^0-9]"#, "zero height"),
-            (r#"width\s*:\s*0[^0-9]"#, "zero width"),
-            (r#"overflow\s*:\s*hidden"#, "overflow hidden"),
-            (r#"clip\s*:\s*rect\s*\(\s*0"#, "clip rect"),
-            (r#"text-indent\s*:\s*-\d{4,}"#, "negative text indent"),
+        let fragment = Html::parse_fragment(html);
+
+        // Check for elements with style containing hiding patterns
+        let suspicious_selectors = [
+            ("[style*='display:none']", "display:none"),
+            ("[style*='visibility:hidden']", "visibility:hidden"),
+            ("[style*='opacity:0']", "opacity:0"),
+            ("[style*='font-size:0']", "zero font size"),
+            ("[style*='font-size:1px']", "tiny font size"),
+            ("[style*='position:absolute'][style*='left:-']", "off-screen positioning"),
+            ("[style*='clip:rect']", "clipped area"),
+            ("[hidden]", "hidden attribute"),
+            ("[aria-hidden='true']", "aria-hidden"),
         ];
 
-        for (pattern, method) in hidden_patterns {
-            if let Ok(regex) = regex::Regex::new(pattern) {
-                if regex.is_match(html) {
+        for (selector_str, method) in suspicious_selectors {
+            if let Ok(selector) = Selector::parse(selector_str) {
+                if fragment.select(&selector).next().is_some() {
                     issues.push(SecurityIssue::HiddenElement {
-                        element: "style".into(),
+                        element: selector_str.to_string(),
                         hiding_method: method.into(),
                     });
                 }
             }
-        }
-
-        // Check for hidden attribute
-        if html.contains("hidden") || html.contains("aria-hidden=\"true\"") {
-            issues.push(SecurityIssue::HiddenElement {
-                element: "attribute".into(),
-                hiding_method: "hidden attribute".into(),
-            });
         }
 
         issues
@@ -554,35 +607,14 @@ impl Default for ContentScreener {
     }
 }
 
-/// Simple base64 decoder for detection purposes.
-fn base64_decode(input: &str) -> Result<String, ()> {
-    use std::collections::HashMap;
-
-    let alphabet: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-    let mut decode_map = HashMap::new();
-    for (i, &c) in alphabet.iter().enumerate() {
-        decode_map.insert(c, i as u8);
-    }
-
-    let input = input.trim_end_matches('=');
-    let mut output = Vec::new();
-
-    for chunk in input.as_bytes().chunks(4) {
-        let mut acc = 0u32;
-        let mut bits = 0;
-        for &c in chunk {
-            if let Some(&val) = decode_map.get(&c) {
-                acc = (acc << 6) | val as u32;
-                bits += 6;
-            }
-        }
-        while bits >= 8 {
-            bits -= 8;
-            output.push((acc >> bits) as u8 & 0xFF);
-        }
-    }
-
-    String::from_utf8(output).map_err(|_| ())
+/// Robust base64 decoder using the `base64` crate.
+fn base64_decode(input: &str) -> std::result::Result<String, ()> {
+    use base64::{engine::general_purpose, Engine as _};
+    
+    let decoded = general_purpose::STANDARD.decode(input.trim())
+        .map_err(|_| ())?;
+    
+    String::from_utf8(decoded).map_err(|_| ())
 }
 
 #[cfg(test)]

@@ -50,6 +50,8 @@ pub struct BrowserConfig {
     pub devtools: bool,
     /// Sandbox mode (disable for containers).
     pub sandbox: bool,
+    /// Dual-head mode: launches a visible monitoring window alongside headless automation.
+    pub dual_head: bool,
 }
 
 impl Default for BrowserConfig {
@@ -68,6 +70,7 @@ impl Default for BrowserConfig {
             timeout: Duration::from_secs(60),
             devtools: false,
             sandbox: true,
+            dual_head: false,
         }
     }
 }
@@ -102,6 +105,8 @@ pub struct GrokConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input (if supported).
+    pub file_input_selector: Option<String>,
     /// Model variant to use.
     pub model: String,
 }
@@ -116,6 +121,7 @@ impl Default for GrokConfig {
             submit_selector: r#"button[data-testid="grokSend"]"#.into(),
             response_selector: r#"div[data-testid="grokResponse"]"#.into(),
             ready_selector: r#"textarea[data-testid="grokInput"]"#.into(),
+            file_input_selector: Some(r#"input[type="file"]"#.into()),
             model: "grok-2".into(),
         }
     }
@@ -137,6 +143,8 @@ pub struct ClaudeConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input.
+    pub file_input_selector: Option<String>,
     /// Organization (if applicable).
     pub organization: Option<String>,
 }
@@ -151,6 +159,7 @@ impl Default for ClaudeConfig {
             submit_selector: r#"button[aria-label="Send message"]"#.into(),
             response_selector: r#"div.prose"#.into(),
             ready_selector: r#"div[contenteditable="true"]"#.into(),
+            file_input_selector: Some(r#"input[type="file"]"#.into()),
             organization: None,
         }
     }
@@ -172,6 +181,8 @@ pub struct GeminiConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input.
+    pub file_input_selector: Option<String>,
     /// Google account to use.
     pub google_account: Option<String>,
 }
@@ -186,6 +197,7 @@ impl Default for GeminiConfig {
             submit_selector: r#"button[aria-label="Send message"]"#.into(),
             response_selector: r#"message-content"#.into(),
             ready_selector: r#"rich-textarea"#.into(),
+            file_input_selector: Some(r#"input[type="file"]"#.into()),
             google_account: None,
         }
     }
@@ -207,6 +219,8 @@ pub struct ChatGptConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input.
+    pub file_input_selector: Option<String>,
     /// Model to use (gpt-4o, gpt-4, etc).
     pub model: String,
 }
@@ -221,6 +235,7 @@ impl Default for ChatGptConfig {
             submit_selector: r#"button[data-testid="send-button"]"#.into(),
             response_selector: r#"div[data-message-author-role="assistant"]"#.into(),
             ready_selector: r#"textarea[data-id="root"]"#.into(),
+            file_input_selector: Some(r#"input[type="file"]"#.into()),
             model: "gpt-4o".into(),
         }
     }
@@ -242,6 +257,8 @@ pub struct PerplexityConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input.
+    pub file_input_selector: Option<String>,
 }
 
 #[cfg(feature = "perplexity")]
@@ -251,9 +268,10 @@ impl Default for PerplexityConfig {
             login_url: "https://www.perplexity.ai".into(),
             chat_url: "https://www.perplexity.ai".into(),
             input_selector: r#"textarea[placeholder*="Ask"]"#.into(),
-            submit_selector: r#"button[aria-label="Submit"]"#.into(),
+            submit_selector: r#"button[aria-label="Submit query"]"#.into(),
             response_selector: r#"div.prose"#.into(),
             ready_selector: r#"textarea[placeholder*="Ask"]"#.into(),
+            file_input_selector: Some(r#"input[type="file"]"#.into()),
         }
     }
 }
@@ -274,6 +292,8 @@ pub struct NotebookLmConfig {
     pub response_selector: String,
     /// CSS selector to wait for page ready.
     pub ready_selector: String,
+    /// CSS selector for file input.
+    pub file_input_selector: Option<String>,
 }
 
 #[cfg(feature = "notebooklm")]
@@ -286,6 +306,7 @@ impl Default for NotebookLmConfig {
             submit_selector: r#"button[aria-label="Send"]"#.into(),
             response_selector: r#"div.response-content"#.into(),
             ready_selector: r#"textarea[aria-label*="Ask"]"#.into(),
+            file_input_selector: Some(r#"button[aria-label="Add source"]"#.into()),
         }
     }
 }

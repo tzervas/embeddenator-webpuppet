@@ -163,6 +163,26 @@ impl ProviderTrait for GeminiProvider {
             .await
             .map_err(|e| Error::Browser(e.to_string()))?;
 
+        // Handle attachments if any
+        if !request.attachments.is_empty() {
+            if let Some(ref selector) = self.config.file_input_selector {
+                let mut paths = Vec::new();
+                for attachment in &request.attachments {
+                    let temp_dir = std::env::temp_dir().join("webpuppet_uploads_gemini");
+                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    let file_path = temp_dir.join(&attachment.name);
+                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    paths.push(file_path);
+                }
+
+                session.upload_files(selector, &paths).await?;
+                // Give Gemini a moment to process the upload
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            } else {
+                tracing::warn!("Gemini provider does not have a file input selector configured");
+            }
+        }
+
         // Small delay
         tokio::time::sleep(Duration::from_millis(100)).await;
 

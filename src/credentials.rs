@@ -5,15 +5,23 @@ use std::sync::RwLock;
 #[allow(unused_imports)]
 use crate::error::{Error, Result};
 use crate::providers::Provider;
+use crate::security::DataEncryption;
+use std::sync::OnceLock;
 
 /// Service name for keyring entries.
 #[allow(dead_code)]
 const SERVICE_NAME: &str = "embeddenator-webpuppet";
 
+static MEM_KEY: OnceLock<String> = OnceLock::new();
+
+fn get_mem_key() -> &'static str {
+    MEM_KEY.get_or_init(|| uuid::Uuid::new_v4().to_string())
+}
+
 /// Secure credential storage.
 pub struct CredentialStore {
     // In-memory cache (encrypted at rest)
-    cache: RwLock<std::collections::HashMap<String, String>>,
+    cache: RwLock<std::collections::HashMap<String, Vec<u8>>>,
 }
 
 impl CredentialStore {
@@ -22,6 +30,10 @@ impl CredentialStore {
         Ok(Self {
             cache: RwLock::new(std::collections::HashMap::new()),
         })
+    }
+
+    fn get_encryption(&self) -> DataEncryption {
+        DataEncryption::new(get_mem_key(), b"mem_cache_salt")
     }
 
     /// Store a credential for a provider.
@@ -38,9 +50,13 @@ impl CredentialStore {
                 .map_err(|e| Error::Credential(e.to_string()))?;
         }
 
-        // Also cache in memory
+        // Also cache in memory (encrypted)
+        let encryption = self.get_encryption();
+        let encrypted = encryption.encrypt(value.as_bytes())
+            .map_err(|e| Error::Internal(format!("Memory encryption failed: {}", e)))?;
+
         let mut cache = self.cache.write().unwrap();
-        cache.insert(entry_name, value.to_string());
+        cache.insert(entry_name, encrypted);
 
         Ok(())
     }
@@ -52,8 +68,11 @@ impl CredentialStore {
         // Check in-memory cache first
         {
             let cache = self.cache.read().unwrap();
-            if let Some(value) = cache.get(&entry_name) {
-                return Ok(Some(value.clone()));
+            if let Some(encrypted) = cache.get(&entry_name) {
+                let encryption = self.get_encryption();
+                let decrypted = encryption.decrypt(encrypted)
+                    .map_err(|e| Error::Internal(format!("Memory decryption failed: {}", e)))?;
+                return Ok(Some(String::from_utf8(decrypted).unwrap()));
             }
         }
 
@@ -65,9 +84,13 @@ impl CredentialStore {
             
             match entry.get_password() {
                 Ok(value) => {
-                    // Cache for future use
+                    // Cache for future use (encrypted)
+                    let encryption = self.get_encryption();
+                    let encrypted = encryption.encrypt(value.as_bytes())
+                        .map_err(|e| Error::Internal(format!("Memory encryption failed: {}", e)))?;
+                    
                     let mut cache = self.cache.write().unwrap();
-                    cache.insert(entry_name, value.clone());
+                    cache.insert(entry_name, encrypted);
                     return Ok(Some(value));
                 }
                 Err(keyring::Error::NoEntry) => return Ok(None),

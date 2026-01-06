@@ -633,7 +633,11 @@ impl PermissionGuard {
             // Check allowed domains (if not empty)
             if !self.policy.allowed_domains.is_empty() {
                 let domain = extract_domain(url);
-                if !self.policy.allowed_domains.iter().any(|d| domain.ends_with(d)) {
+                let is_allowed = self.policy.allowed_domains.iter().any(|d| {
+                    domain == *d || domain.ends_with(&format!(".{}", d))
+                });
+
+                if !is_allowed {
                     return PermissionDecision::deny(
                         operation,
                         format!("Domain '{}' not in allowlist", domain),
@@ -726,8 +730,16 @@ pub struct AuditEntry {
 }
 
 /// Extract domain from URL.
-fn extract_domain(url: &str) -> String {
-    url.trim_start_matches("https://")
+fn extract_domain(url_str: &str) -> String {
+    use url::Url;
+    if let Ok(url) = Url::parse(url_str) {
+        if let Some(host) = url.host_str() {
+            return host.to_string();
+        }
+    }
+    
+    // Fallback for relative or malformed URLs
+    url_str.trim_start_matches("https://")
         .trim_start_matches("http://")
         .split('/')
         .next()

@@ -17,6 +17,7 @@ use crate::config::Config;
 use crate::credentials::CredentialStore;
 use crate::error::{Error, Result};
 use crate::providers::Provider;
+use crate::security::DataEncryption;
 
 /// Browser session for a specific provider.
 pub struct Session {
@@ -30,6 +31,10 @@ pub struct Session {
     browser: Arc<Browser>,
     /// The current page
     page: Arc<RwLock<Page>>,
+    /// Secondary browser for monitoring (Dual Head mode)
+    secondary_browser: Option<Arc<Browser>>,
+    /// Secondary page for monitoring
+    secondary_page: Option<Arc<RwLock<Page>>>,
     /// Whether browser is visible (non-headless)
     visible: bool,
 }
@@ -44,6 +49,8 @@ impl Clone for Session {
             conversation_id: self.conversation_id.clone(),
             browser: self.browser.clone(),
             page: self.page.clone(),
+            secondary_browser: self.secondary_browser.clone(),
+            secondary_page: self.secondary_page.clone(),
             visible: self.visible,
         }
     }
@@ -133,25 +140,84 @@ impl Session {
 
         let browser_config = builder.build().map_err(|e| Error::Browser(e.to_string()))?;
 
-        // Launch browser
+        // Launch primary browser
         let (browser, mut handler) = Browser::launch(browser_config)
             .await
             .map_err(|e| Error::Browser(format!("Failed to launch browser: {}", e)))?;
 
-        // Spawn handler task
+        // Spawn handler task for primary browser
         tokio::spawn(async move {
             while let Some(event) = handler.next().await {
                 if let Err(e) = event {
-                    tracing::warn!("Browser handler error: {}", e);
+                    tracing::debug!("Primary browser handler event: {:?}", e);
                 }
             }
         });
 
-        // Create initial page
+        // Create initial page for primary browser
         let page = browser
             .new_page("about:blank")
             .await
             .map_err(|e| Error::Browser(format!("Failed to create page: {}", e)))?;
+
+        // Handle Dual Head mode
+        let mut secondary_browser = None;
+        let mut secondary_page = None;
+
+        if config.browser.dual_head {
+            tracing::info!("Dual Head mode enabled. Launching secondary monitoring browser.");
+            
+            // Re-build config for secondary (visible) browser
+            let mut sec_builder = BrowserConfig::builder()
+                .chrome_executable(&browser_install.executable_path)
+                .with_head() // Always visible for monitoring
+                .viewport(Viewport {
+                    width: config.browser.window_width,
+                    height: config.browser.window_height,
+                    device_scale_factor: None,
+                    emulating_mobile: false,
+                    is_landscape: false,
+                    has_touch: false,
+                });
+
+            // Use a separate temp profile for secondary to avoid locking
+            let sec_profile = profile_dir.join("monitoring_head");
+            std::fs::create_dir_all(&sec_profile)?;
+            sec_builder = sec_builder.user_data_dir(&sec_profile);
+
+            // Add extra args
+            if !config.browser.sandbox {
+                sec_builder = sec_builder.arg("--no-sandbox");
+            }
+            
+            for arg in &config.browser.args {
+                sec_builder = sec_builder.arg(arg);
+            }
+
+            let sec_config = sec_builder.build().map_err(|e| Error::Browser(e.to_string()))?;
+
+            // Launch secondary browser
+            let (sec_browser, mut sec_handler) = Browser::launch(sec_config)
+                .await
+                .map_err(|e| Error::Browser(format!("Failed to launch secondary browser: {}", e)))?;
+
+            // Spawn handler task for secondary
+            tokio::spawn(async move {
+                while let Some(event) = sec_handler.next().await {
+                    if let Err(e) = event {
+                        tracing::debug!("Secondary browser handler event: {:?}", e);
+                    }
+                }
+            });
+
+            let sec_page = sec_browser
+                .new_page("about:blank")
+                .await
+                .map_err(|e| Error::Browser(format!("Failed to create secondary page: {}", e)))?;
+
+            secondary_browser = Some(Arc::new(sec_browser));
+            secondary_page = Some(Arc::new(RwLock::new(sec_page)));
+        }
 
         tracing::info!("Browser session created for {}", provider);
 
@@ -163,6 +229,8 @@ impl Session {
             conversation_id: None,
             browser: Arc::new(browser),
             page: Arc::new(RwLock::new(page)),
+            secondary_browser,
+            secondary_page,
             visible,
         })
     }
@@ -247,6 +315,12 @@ impl Session {
         page.goto(url)
             .await
             .map_err(|e| Error::Browser(format!("Navigation failed: {}", e)))?;
+
+        // Mirror to secondary head if active
+        if let Some(ref sec_page_lock) = self.secondary_page {
+            let sec_page = sec_page_lock.read().await;
+            let _ = sec_page.goto(url).await;
+        }
         
         // Wait for page to stabilize
         tokio::time::sleep(Duration::from_millis(500)).await;
@@ -365,6 +439,35 @@ impl Session {
         Ok(())
     }
 
+    /// Upload files to an input element.
+    pub async fn upload_files(&self, selector: &str, paths: &[PathBuf]) -> Result<()> {
+        tracing::debug!("Uploading {} files to: {}", paths.len(), selector);
+        
+        let page = self.page.read().await;
+        let element = page
+            .find_element(selector)
+            .await
+            .map_err(|e| Error::Browser(format!("Element not found ({}): {}", selector, e)))?;
+        
+        let path_strs: Vec<String> = paths.iter()
+            .map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()).to_string_lossy().to_string())
+            .collect();
+            
+        use chromiumoxide::cdp::browser_protocol::dom::SetFileInputFilesParams;
+        
+        let cmd = SetFileInputFilesParams::builder()
+            .files(path_strs)
+            .node_id(element.node_id)
+            .build()
+            .map_err(|e| Error::Browser(e))?;
+
+        page.execute(cmd)
+            .await
+            .map_err(|e| Error::Browser(format!("File upload failed: {}", e)))?;
+            
+        Ok(())
+    }
+
     /// Press a key (e.g., "Enter", "Tab")
     pub async fn press_key(&self, key: &str) -> Result<()> {
         tracing::debug!("Pressing key: {}", key);
@@ -404,10 +507,10 @@ impl Session {
         Ok(())
     }
     
-    /// Save cookies for session persistence.
+    /// Save cookies for session persistence with encryption.
     pub async fn save_cookies(&self) -> Result<()> {
-        let cookie_path = self.profile_dir.join("cookies.json");
-        tracing::debug!("Saving cookies to: {:?}", cookie_path);
+        let cookie_path = self.profile_dir.join("cookies.json.enc");
+        tracing::debug!("Saving encrypted cookies to: {:?}", cookie_path);
         
         let page = self.page.read().await;
         let cookies = page
@@ -415,23 +518,64 @@ impl Session {
             .await
             .map_err(|e| Error::Browser(format!("Failed to get cookies: {}", e)))?;
         
-        let json = serde_json::to_string_pretty(&cookies)
+        let json = serde_json::to_string(&cookies)
             .map_err(|e| Error::Internal(format!("Failed to serialize cookies: {}", e)))?;
-        std::fs::write(cookie_path, json)?;
+
+        // Encrypt the cookies
+        let master_key = self.get_encryption_key()?;
+        let encryption = DataEncryption::new(&master_key, b"static_salt_for_cookies");
+        let encrypted = encryption.encrypt(json.as_bytes())
+            .map_err(|e| Error::Internal(format!("Encryption failed: {}", e)))?;
+
+        std::fs::write(cookie_path, encrypted)?;
         
         Ok(())
     }
 
     /// Load cookies from previous session.
     pub async fn load_cookies(&self) -> Result<()> {
-        let cookie_path = self.profile_dir.join("cookies.json");
+        let cookie_path = self.profile_dir.join("cookies.json.enc");
         
         if cookie_path.exists() {
-            tracing::debug!("Loading cookies from: {:?}", cookie_path);
-            // Cookies are stored in user profile, so they should auto-load
+            tracing::debug!("Loading encrypted cookies from: {:?}", cookie_path);
+            let encrypted = std::fs::read(&cookie_path)?;
+            
+            let master_key = self.get_encryption_key()?;
+            let encryption = DataEncryption::new(&master_key, b"static_salt_for_cookies");
+            
+            let decrypted = encryption.decrypt(&encrypted)
+                .map_err(|e| Error::Internal(format!("Decryption failed: {}", e)))?;
+            
+            let cookies: Vec<chromiumoxide::cdp::browser_protocol::network::Cookie> = 
+                serde_json::from_slice(&decrypted)
+                .map_err(|e| Error::Internal(format!("Failed to deserialize cookies: {}", e)))?;
+
+            // Convert Cookie to CookieParam for set_cookies
+            use chromiumoxide::cdp::browser_protocol::network::CookieParam;
+            let cookie_params: Vec<CookieParam> = cookies.into_iter().map(|c| {
+                let json = serde_json::to_value(&c).unwrap();
+                serde_json::from_value(json).unwrap()
+            }).collect();
+
+            let page = self.page.read().await;
+            page.set_cookies(cookie_params)
+                .await
+                .map_err(|e| Error::Browser(format!("Failed to set cookies: {}", e)))?;
         }
         
         Ok(())
+    }
+
+    /// Helper to get or create an encryption key for this session.
+    fn get_encryption_key(&self) -> Result<String> {
+        match self.credentials.get(self.provider, "cookie_encryption_key")? {
+            Some(key) => Ok(key),
+            None => {
+                let new_key = uuid::Uuid::new_v4().to_string();
+                self.credentials.store(self.provider, "cookie_encryption_key", &new_key)?;
+                Ok(new_key)
+            }
+        }
     }
     
     /// Get text content of an element handle (for compatibility with provider code).

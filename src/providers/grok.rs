@@ -68,7 +68,7 @@ impl ProviderTrait for GrokProvider {
         ProviderCapabilities {
             conversation: true,
             vision: true,
-            file_upload: false, // Grok web doesn't support file upload yet
+            file_upload: true, // Grok supports file uploads
             code_execution: false,
             web_search: true, // Grok has real-time web access
             max_context: Some(128_000), // Grok 2 has 128k context
@@ -158,6 +158,26 @@ impl ProviderTrait for GrokProvider {
             .type_text(&self.config.input_selector, &request.message)
             .await
             .map_err(|e| Error::Browser(e.to_string()))?;
+
+        // Handle attachments if any
+        if !request.attachments.is_empty() {
+            if let Some(ref selector) = self.config.file_input_selector {
+                let mut paths = Vec::new();
+                for attachment in &request.attachments {
+                    let temp_dir = std::env::temp_dir().join("webpuppet_uploads_grok");
+                    std::fs::create_dir_all(&temp_dir).map_err(|e| Error::Browser(e.to_string()))?;
+                    let file_path = temp_dir.join(&attachment.name);
+                    std::fs::write(&file_path, &attachment.data).map_err(|e| Error::Browser(e.to_string()))?;
+                    paths.push(file_path);
+                }
+
+                session.upload_files(selector, &paths).await?;
+                // Give Grok a moment to process the upload
+                tokio::time::sleep(Duration::from_secs(2)).await;
+            } else {
+                tracing::warn!("Grok provider does not have a file input selector configured");
+            }
+        }
 
         // Small delay
         tokio::time::sleep(Duration::from_millis(100)).await;
