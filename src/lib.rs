@@ -1,31 +1,29 @@
 //! # embeddenator-webpuppet
 //!
-//! Self-hosted browser automation for AI provider web UIs.
+//! Browser automation library for AI provider web interfaces.
 //!
-//! This crate provides puppeteer-like functionality for automating interactions
-//! with AI chat interfaces (Grok, Claude, Gemini) through their web UIs,
-//! bypassing API requirements.
+//! This crate provides programmatic control of Chrome/Chromium browsers to interact 
+//! with AI chat providers through their web UIs. It handles authentication, session 
+//! management, and response extraction for research and development workflows.
 //!
 //! ## Features
 //!
-//! - **Multi-provider support**: Grok (X.ai), Claude (Anthropic), Gemini (Google)
-//! - **Headless browser automation**: Chrome/Chromium/Brave via chromiumoxide
-//! - **System browser integration**: Use existing Brave/Chrome profiles with auth
-//! - **Session management**: Persistent auth, cookie handling
-//! - **Rate limiting**: Respect provider limits, avoid detection
-//! - **Security guardrails**: Permission system blocks destructive operations
-//! - **Secure credential storage**: OS keyring integration
+//! - **Multi-provider support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM
+//! - **Browser automation**: Chrome/Chromium control via chromiumoxide
+//! - **Session persistence**: Secure credential and cookie storage
+//! - **Rate limiting**: Configurable request throttling
+//! - **Content security**: Response screening for security threats
 //!
 //! ## Security Considerations
 //!
-//! ⚠️ **IMPORTANT**: This tool automates web UIs which may violate terms of service.
-//! Use responsibly and only for legitimate research purposes.
+//! ⚠️ **IMPORTANT**: This library automates third-party web interfaces. Users must
+//! comply with provider terms of service and applicable laws.
 //!
-//! - Credentials are stored in the OS keyring, never in plaintext
-//! - Browser profiles are sandboxed per-provider
+//! - Credentials stored in OS keyring (never plaintext)
+//! - Browser profiles sandboxed per provider
 //! - Rate limiting prevents abuse detection
-//! - All automation is local - no external API calls
-//! - Permission guardrails block destructive operations by default
+//! - All automation is local (no external API calls)
+//! - Permission controls block unauthorized operations
 //!
 //! ## Example
 //!

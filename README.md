@@ -1,29 +1,28 @@
 # embeddenator-webpuppet
 
-Self-hosted browser automation for AI/chat web UIs and a small set of web tools.
+Browser automation library for AI chat web interfaces.
 
-This crate drives a local Chrome/Chromium/Brave browser (via `chromiumoxide`) to interact with provider UIs. It is intended for research/benchmarks and “operator in the loop” workflows (login, 2FA, captchas).
+This library provides programmatic control of Chrome/Chromium browsers to interact with AI chat providers through their web UIs. It handles authentication, session management, and response extraction for research and development workflows.
 
-> ⚠️ This automates third‑party web UIs. Use responsibly and comply with applicable terms/policies.
+> ⚠️ **Important**: This automates third-party web interfaces. Users must comply with provider terms of service and applicable laws.
 
 ## Overview
 
-`embeddenator-webpuppet` provides puppeteer-like functionality for automating interactions with AI chat interfaces through their web UIs, bypassing API requirements. This is useful for:
+`embeddenator-webpuppet` enables automated interactions with AI chat interfaces when API access is unavailable, restricted, or when specific web-only features are needed. The library handles:
 
-- Research and experimentation without API costs
-- Accessing features not available via API
-- Comparing responses across providers
-- Batch processing prompts across multiple AI systems
+- Browser session management and authentication
+- Rate limiting and anti-detection measures
+- Response extraction and content sanitization
+- Multi-provider workflow orchestration
 
 ## Features
 
-- **Providers/tools**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle (dataset search)
-- **Headless browser automation**: Chrome/Chromium via chromiumoxide
-- **Session management**: Persistent auth with cookie handling
-- **Rate limiting**: Respect provider limits, avoid detection
-- **Secure credential storage**: OS keyring integration (never plaintext)
-- **Security screening**: Filter invisible text, prompt injections, encoded payloads (sanitizes responses)
-- **Permission guardrails**: Default-deny + domain allowlist; blocks destructive operations; HTTPS-only in secure mode
+- **Multi-Provider Support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM
+- **Browser Automation**: Chrome/Chromium control via chromiumoxide
+- **Session Persistence**: Secure credential and cookie storage using OS keyring
+- **Rate Limiting**: Configurable request throttling with exponential backoff
+- **Content Security**: Response screening for common security threats
+- **Permission Controls**: Domain allowlisting and operation restrictions
 
 ## Installation
 
@@ -31,8 +30,10 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-embeddenator-webpuppet = { version = "0.1", features = ["all-providers"] }
+embeddenator-webpuppet = { version = "0.1.0-alpha.2", features = ["all-providers"] }
 ```
+
+**Note**: This is pre-release software. APIs may change between versions.
 
 ### Feature Flags
 
@@ -195,15 +196,14 @@ let puppet = WebPuppet::builder()
 
 Capabilities are declared per provider in code (not runtime UI detection yet). For programmatic access, use `WebPuppet::provider_capabilities()`.
 
-| Provider | Conversation | Vision | File Upload | Code Execution | Web Search | Max Context |
-|----------|--------------|--------|-------------|----------------|------------|-------------|
-| Claude | ✅ | ✅ | ✅ | ❌ | ❌ | 200k |
-| Grok | ✅ | ✅ | ❌ | ❌ | ✅ | 128k |
-| Gemini | ✅ | ✅ | ✅ | ✅ | ✅ | 1M |
-| ChatGPT | ✅ | ✅ | ✅ | ✅ | ✅ | 128k |
-| Perplexity | ✅ | ❌ | ✅ | ❌ | ✅ | 32k |
-| NotebookLM | ✅ | ❌ | ✅ | ❌ | ✅ | 500k |
-| Kaggle | ❌ | ❌ | ❌ | ❌ | ✅ | — |
+| Provider | Conversation | File Upload | Notes |
+|----------|--------------|-------------|-------|
+| Claude | ✅ | ✅ | Anthropic's Claude models |
+| Grok | ✅ | ❌ | X.ai's Grok models |
+| Gemini | ✅ | ✅ | Google's Gemini models |
+| ChatGPT | ✅ | ✅ | OpenAI's GPT models |
+| Perplexity | ✅ | ✅ | Perplexity AI search |
+| NotebookLM | ✅ | ✅ | Google's NotebookLM |
 
 ## Security
 
@@ -213,10 +213,13 @@ Capabilities are declared per provider in code (not runtime UI detection yet). F
 - **Session isolation**: Each provider has independent browser context
 - **Response screening**: Automatic filtering of security threats
 
-## Current Limitations
+## Limitations
 
-- Provider feature parity is not complete: model/tool toggles and other UI features are not uniformly detected/controlled across providers yet.
-- Kaggle support is currently dataset search/catalog only (no automated downloads).
+- **Pre-release software**: APIs may change without notice
+- **Provider UI Dependencies**: Changes to provider web interfaces may break functionality
+- **Feature Parity**: Not all provider-specific features are supported uniformly
+- **Authentication**: Requires manual login for initial setup
+- **Rate Limits**: Subject to provider-imposed usage restrictions
 
 ### Content Security Screening
 
@@ -306,11 +309,12 @@ embeddenator-webpuppet/
 │       └── grok.rs     # Grok implementation
 ```
 
-## Requirements
+## System Requirements
 
-- Chrome/Chromium browser (auto-detected, or specify path)
-- Linux, macOS, or Windows with keyring support
-- For containers: use `--no-sandbox` configuration
+- **Browser**: Chrome, Chromium, or Brave (auto-detected)
+- **Operating System**: Linux, macOS, or Windows
+- **Keyring**: OS-level credential storage support
+- **Container Support**: Available with `--no-sandbox` configuration
 
 ## Troubleshooting
 
