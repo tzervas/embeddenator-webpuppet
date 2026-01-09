@@ -1,4 +1,4 @@
-# webpuppet-re
+# webpuppet-rs
 
 Browser automation library for AI chat web interfaces.
 
