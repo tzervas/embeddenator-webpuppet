@@ -1,4 +1,4 @@
-# embeddenator-webpuppet
+# webpuppet-re
 
 Browser automation library for AI chat web interfaces.
 
