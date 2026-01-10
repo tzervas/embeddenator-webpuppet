@@ -183,7 +183,7 @@ impl CredentialStore {
         key: &str,
     ) -> Result<Option<secrecy::SecretString>> {
         self.get(provider, key)
-            .map(|opt| opt.map(|s| secrecy::SecretString::new(s.into())))
+            .map(|opt| opt.map(secrecy::SecretString::new))
     }
 }
 
