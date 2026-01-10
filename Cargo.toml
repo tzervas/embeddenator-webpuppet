@@ -1,6 +1,6 @@
 [package]
 name = "webpuppet"
-version = "0.1.0-alpha"
+version = "0.1.4-alpha"
 edition = "2021"
 rust-version = "1.75.0"
 authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
