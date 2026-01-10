@@ -1,5 +1,5 @@
 # Security Audit Report
-## embeddenator-webpuppet v0.1.0-alpha.2
+## webpuppet v0.1.0-alpha.2
 
 **Date:** January 6, 2026  
 **Audit Type:** Comprehensive Security Review & Compliance Assessment  
@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-This report documents the security review performed on embeddenator-webpuppet, a browser automation library for AI provider web interfaces. The project has undergone comprehensive security hardening and is ready for integration in secure environments.
+This report documents the security review performed on webpuppet, a browser automation library for AI provider web interfaces. The project has undergone comprehensive security hardening and is ready for integration in secure environments.
 
 ## Security Architecture
 
@@ -132,7 +132,7 @@ Supply Chain Issues: 0
 
 ## Conclusion
 
-embeddenator-webpuppet has successfully passed comprehensive security review and is ready for production deployment. The library demonstrates strong security posture with defense-in-depth architecture, minimal attack surface, and robust error handling.
+webpuppet has successfully passed comprehensive security review and is ready for production deployment. The library demonstrates strong security posture with defense-in-depth architecture, minimal attack surface, and robust error handling.
 
 **Key Achievements:**
 - Zero known vulnerabilities in dependency tree

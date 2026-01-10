@@ -71,7 +71,7 @@ impl Session {
             .unwrap_or_else(|| {
                 dirs::data_local_dir()
                     .unwrap_or_else(|| PathBuf::from("."))
-                    .join("embeddenator-webpuppet")
+                    .join("webpuppet")
             })
             .join(provider.name());
 

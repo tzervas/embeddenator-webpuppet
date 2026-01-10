@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0-alpha.3] - 2026-01-10
+### Changed
+- **BREAKING**: Renamed crate from `embeddenator-webpuppet` to `webpuppet`
+- Simplified all internal references from embeddenator naming
+- Previous version (embeddenator-webpuppet v0.1.0-alpha.3) has been yanked from crates.io
+
+## [0.1.0-alpha.3] - 2025-01-19
 
 ### Added
 - Multi-browser support: Extended from 4 to 8 browser types (Brave, Chrome, Chromium, Edge, Opera, Vivaldi, Firefox, Safari)
@@ -49,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Permission and security controls
 - Configuration management
 
-[Unreleased]: https://github.com/tzervas/embeddenator-webpuppet/compare/v0.1.0-alpha.3...HEAD
-[0.1.0-alpha.3]: https://github.com/tzervas/embeddenator-webpuppet/compare/v0.1.0-alpha.2...v0.1.0-alpha.3
-[0.1.0-alpha.2]: https://github.com/tzervas/embeddenator-webpuppet/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
-[0.1.0-alpha.1]: https://github.com/tzervas/embeddenator-webpuppet/releases/tag/v0.1.0-alpha.1
+[Unreleased]: https://github.com/tzervas/webpuppet-rs/compare/v0.1.0-alpha.3...HEAD
+[0.1.0-alpha.3]: https://github.com/tzervas/webpuppet-rs/compare/v0.1.0-alpha.2...v0.1.0-alpha.3
+[0.1.0-alpha.2]: https://github.com/tzervas/webpuppet-rs/compare/v0.1.0-alpha.1...v0.1.0-alpha.2
+[0.1.0-alpha.1]: https://github.com/tzervas/webpuppet-rs/releases/tag/v0.1.0-alpha.1

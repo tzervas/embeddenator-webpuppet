@@ -1,6 +1,6 @@
-# Contributing to embeddenator-webpuppet
+# Contributing to webpuppet
 
-Thank you for your interest in contributing to embeddenator-webpuppet! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to webpuppet! This document provides guidelines for contributing to the project.
 
 ## Development Setup
 

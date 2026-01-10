@@ -7,7 +7,7 @@
 use std::io::Write;
 use std::path::PathBuf;
 
-use embeddenator_webpuppet::{PromptRequest, Provider, ScreeningConfig, WebPuppet};
+use webpuppet::{PromptRequest, Provider, ScreeningConfig, WebPuppet};
 
 #[derive(Debug)]
 #[allow(dead_code)]

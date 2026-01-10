@@ -13,7 +13,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use embeddenator_webpuppet::permissions::{PermissionPolicy, Operation};
+//! use webpuppet::permissions::{PermissionPolicy, Operation};
 //!
 //! let policy = PermissionPolicy::builder()
 //!     .allow_domain("claude.ai")

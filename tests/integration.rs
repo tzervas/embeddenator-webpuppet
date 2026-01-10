@@ -1,8 +1,8 @@
-//! Integration tests for embeddenator-webpuppet.
+//! Integration tests for webpuppet.
 //!
 //! These tests require a browser to be installed and optionally authenticated.
 
-use embeddenator_webpuppet::{
+use webpuppet::{
     BrowserDetector, ContentScreener, InterventionDetector, InterventionReason, Operation,
     PermissionGuard, PermissionPolicy,
 };

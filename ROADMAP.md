@@ -1,4 +1,4 @@
-# embeddenator-webpuppet: Next Enhancement Roadmap
+# webpuppet: Next Enhancement Roadmap
 ## Version 0.2.0 Development Plan
 
 **Current Status**: v0.1.0-alpha.3 - Multi-browser support, cross-platform detection
