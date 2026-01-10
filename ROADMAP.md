@@ -1,7 +1,7 @@
 # embeddenator-webpuppet: Next Enhancement Roadmap
 ## Version 0.2.0 Development Plan
 
-**Current Status**: v0.1.0-alpha.2 - Security hardened, documentation complete
+**Current Status**: v0.1.0-alpha.3 - Multi-browser support, cross-platform detection
 **Target**: v0.2.0 - Production readiness and feature expansion
 
 ---
@@ -13,10 +13,16 @@
 - macOS: 13.0 Ventura+ (Intel and Apple Silicon)
 - Windows: 11 22H2+ (x64 and ARM64)
 
-**Browser Support:**
-- Chrome/Chromium 120+
-- Brave 1.60+
-- Edge 120+
+**Browser Support (Chromium-based with CDP automation):**
+- Brave 1.60+ ✅
+- Chrome/Chromium 120+ ✅
+- Edge 120+ ✅
+- Opera 95+ ✅
+- Vivaldi 6.0+ ✅
+
+**Browser Detection Only (automation planned):**
+- Firefox 120+ (Gecko engine - requires geckodriver)
+- Safari 17+ (WebKit engine - macOS only, requires safaridriver)
 
 **Rust Version Policy:**
 - MSRV: 1.75.0 (current stable at time of writing)

@@ -2,24 +2,35 @@
 //!
 //! Browser automation library for AI provider web interfaces.
 //!
-//! This crate provides programmatic control of Chrome/Chromium browsers to interact
+//! This crate provides programmatic control of Chromium-based browsers to interact
 //! with AI chat providers through their web UIs. It handles authentication, session
 //! management, and response extraction for research and development workflows.
 //!
+//! ## Supported Browsers
+//!
+//! **Chromium-based (Full CDP automation)**:
+//! Brave, Chrome, Chromium, Edge, Opera, Vivaldi
+//!
+//! **Detection only**: Firefox (Gecko), Safari (WebKit, macOS only)
+//!
+//! **Cross-platform**: Linux, macOS, Windows (including Flatpak/Snap on Linux)
+//!
 //! ## Features
 //!
-//! - **Multi-provider support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM
-//! - **Browser automation**: Chrome/Chromium control via chromiumoxide
-//! - **Session persistence**: Secure credential and cookie storage
-//! - **Rate limiting**: Configurable request throttling
+//! - **Multi-provider support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle
+//! - **Browser automation**: CDP (Chrome DevTools Protocol) via chromiumoxide
+//! - **Browser detection**: Automatic detection with platform-specific paths
+//! - **Session persistence**: Secure credential and cookie storage with AES-256-GCM
+//! - **Rate limiting**: Configurable request throttling with humanized delays
 //! - **Content security**: Response screening for security threats
+//! - **Permission controls**: Domain allowlisting and operation restrictions
 //!
 //! ## Security Considerations
 //!
 //! ⚠️ **IMPORTANT**: This library automates third-party web interfaces. Users must
 //! comply with provider terms of service and applicable laws.
 //!
-//! - Credentials stored in OS keyring (never plaintext)
+//! - Credentials stored in OS keyring with AES-256-GCM encryption (never plaintext)
 //! - Browser profiles sandboxed per provider
 //! - Rate limiting prevents abuse detection
 //! - All automation is local (no external API calls)
