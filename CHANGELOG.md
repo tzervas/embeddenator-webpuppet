@@ -7,12 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0-alpha.3] - 2026-01-09
+## [0.1.0-alpha.3] - 2026-01-10
+
+### Added
+- Multi-browser support: Extended from 4 to 8 browser types (Brave, Chrome, Chromium, Edge, Opera, Vivaldi, Firefox, Safari)
+- Cross-platform browser detection for Linux, macOS, and Windows
+- Support for Flatpak and Snap package formats on Linux
+- CDP capability detection via `supports_cdp()` and `detect_cdp_capable()`
+- Browser engine identification via `engine()` method (Chromium, Gecko, WebKit)
+- `FromStr` implementation for flexible browser name parsing
+- `is_chromium_based()` helper method
 
 ### Changed
 - CI: Bumped softprops/action-gh-release from 1 to 2
 - CI: Bumped actions/checkout from 4 to 6
-- Merged security hardening and modern platform focus from dev branch
+- CI: Added OpenSSL installation for Firefox feature support
+- CI: Removed ARM64 self-hosted build job
+- Session auto-detection now uses `detect_cdp_capable()` for automation-ready browsers only
+- Updated browser priority ordering to include new browser types
 
 ## [0.1.0-alpha.2] - 2024-12-20
 
