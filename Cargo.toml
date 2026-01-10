@@ -1,10 +1,10 @@
 [package]
 name = "webpuppet"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha"
 edition = "2021"
 rust-version = "1.75.0"
 authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
-description = "Browser automation library for AI provider web interfaces"
+description = "Web browser programmatic automation and control library for research, testing, and workflow automation"
 license = "MIT"
 repository = "https://github.com/tzervas/webpuppet-rs"
 documentation = "https://docs.rs/webpuppet"

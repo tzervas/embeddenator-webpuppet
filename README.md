@@ -1,29 +1,56 @@
 # webpuppet
 
-Browser automation library for AI chat web interfaces.
+**Web Browser Programmatic Automation & Control Library**
 
-This library provides programmatic control of Chrome/Chromium browsers to interact with AI chat providers through their web UIs. It handles authentication, session management, and response extraction for research and development workflows.
+A Rust library for programmatic automation and control of web browsers, enabling programmatic interaction with web applications through native browser automation. Designed for research workflows, automated data collection, and web interaction testing when direct APIs are unavailable or restricted.
 
-> ⚠️ **Important**: This automates third-party web interfaces. Users must comply with provider terms of service and applicable laws.
+> **Important Legal Notice**: This is a web browser automation tool. Users are solely responsible for ensuring their use complies with applicable terms of service, intellectual property laws, and regulations. This tool is not designed to bypass, circumvent, or violate any provider's terms of service.
+
+## Purpose & Use Cases
+
+`webpuppet` is a quality-of-life tool for developers and researchers who need programmatic web browser control for legitimate automation use cases:
+
+- **Research Automation**: Automated data collection and information gathering workflows
+- **Testing & Development**: Web application testing and integration workflows
+- **Quality Assurance**: Automated QA testing for web interfaces
+- **Native Web Search**: Programmatic access to web search capabilities when APIs are unavailable
+- **Workflow Automation**: Automating repetitive web interaction tasks
+- **Deep Research**: Foundation library for complex, exhaustive research automation pipelines
+
+**Not Intended For**: Bypassing authentication, circumventing access controls, violating terms of service, or circumventing security measures.
+
+## Architecture
+
+webpuppet is designed as a foundational library that can be integrated into larger research automation systems. The library itself provides core automation capabilities, while security and content screening are handled by the companion **security-mcp** server for systems requiring additional security guardrails.
+
+### Security Model
+
+- **Primary Library**: webpuppet (this crate) - provides browser automation and session management
+- **Security Partner**: [security-mcp](https://github.com/tzervas/security-mcp) - provides content screening, injection detection, and security guardrails
+- **MCP Integration**: [webpuppet-mcp](https://github.com/tzervas/webpuppet-rs-mcp) - exposes webpuppet as an MCP server
+
+For systems requiring enhanced security, use the **security-mcp** server as the primary interface to webpuppet, which automatically manages both servers together.
 
 ## Overview
 
-`webpuppet` enables automated interactions with AI chat interfaces when API access is unavailable, restricted, or when specific web-only features are needed. The library handles:
+`webpuppet` enables programmatic browser automation and control through native browser APIs when traditional methods (like API-only access) are unavailable or restricted. The library handles:
 
-- Browser session management and authentication
-- Rate limiting and anti-detection measures
-- Response extraction and content sanitization
-- Multi-provider workflow orchestration
+- Cross-platform browser detection and session management
+- Automated authentication workflows with session persistence
+- Rate limiting and request throttling
+- Content extraction and response handling
+- Multi-browser support (Chromium-based browsers)
 
 ## Features
 
-- **Multi-Provider Support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle
-- **Browser Automation**: CDP automation for Chromium-based browsers (Brave, Chrome, Chromium, Edge, Opera, Vivaldi)
-- **Browser Detection**: Cross-platform detection (Linux, macOS, Windows) with Flatpak/Snap support
+- **Multi-Provider Support**: Built-in support for multiple web interfaces (Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle)
+- **Cross-Platform Browser Automation**: Chromium-based browser support (Brave, Chrome, Chromium, Edge, Opera, Vivaldi, Firefox planned)
+- **Intelligent Browser Detection**: Automatic detection of installed browsers across Linux, macOS, and Windows with Flatpak/Snap support
 - **Session Persistence**: Secure credential and cookie storage using OS keyring with AES-256-GCM encryption
-- **Rate Limiting**: Configurable request throttling with exponential backoff
-- **Content Security**: Response screening for common security threats
-- **Permission Controls**: Domain allowlisting and operation restrictions
+- **Rate Limiting**: Configurable request throttling with exponential backoff for respectful automation
+- **Content Handling**: Response extraction and processing pipelines
+- **Permission Controls**: Domain allowlisting and operation restrictions for controlled automation
+- **Extensible Provider System**: Easy-to-extend architecture for adding new web interface providers
 
 ## Installation
 
@@ -31,7 +58,14 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-webpuppet = { version = "0.1.0-alpha.3", features = ["all-providers"] }
+webpuppet = { version = "0.1", features = ["all-providers"] }
+```
+
+For systems requiring enhanced security screening, also add:
+
+```toml
+[dependencies]
+security-mcp = "0.1"  # Provides content screening and injection detection
 ```
 
 **Note**: This is pre-release software. APIs may change between versions.
