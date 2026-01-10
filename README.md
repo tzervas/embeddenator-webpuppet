@@ -17,9 +17,10 @@ This library provides programmatic control of Chrome/Chromium browsers to intera
 
 ## Features
 
-- **Multi-Provider Support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM
-- **Browser Automation**: Chrome/Chromium control via chromiumoxide
-- **Session Persistence**: Secure credential and cookie storage using OS keyring
+- **Multi-Provider Support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle
+- **Browser Automation**: CDP automation for Chromium-based browsers (Brave, Chrome, Chromium, Edge, Opera, Vivaldi)
+- **Browser Detection**: Cross-platform detection (Linux, macOS, Windows) with Flatpak/Snap support
+- **Session Persistence**: Secure credential and cookie storage using OS keyring with AES-256-GCM encryption
 - **Rate Limiting**: Configurable request throttling with exponential backoff
 - **Content Security**: Response screening for common security threats
 - **Permission Controls**: Domain allowlisting and operation restrictions
@@ -30,7 +31,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-embeddenator-webpuppet = { version = "0.1.0-alpha.2", features = ["all-providers"] }
+embeddenator-webpuppet = { version = "0.1.0-alpha.3", features = ["all-providers"] }
 ```
 
 **Note**: This is pre-release software. APIs may change between versions.
@@ -39,8 +40,8 @@ embeddenator-webpuppet = { version = "0.1.0-alpha.2", features = ["all-providers
 
 | Feature | Description |
 |---------|-------------|
-| `chromium` (default) | Use chromiumoxide for Chrome/Chromium |
-| `firefox` | Use fantoccini/WebDriver for Firefox |
+| `chromium` (default) | CDP automation for Chromium-based browsers (Brave, Chrome, Chromium, Edge, Opera, Vivaldi) |
+| `firefox` | Firefox detection support (automation requires geckodriver - planned) |
 | `grok` | Enable Grok (X.ai) provider |
 | `claude` | Enable Claude (Anthropic) provider |
 | `gemini` | Enable Gemini (Google) provider |

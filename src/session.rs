@@ -267,16 +267,16 @@ impl Session {
             }
         }
 
-        // Auto-detect browsers
-        let browsers = BrowserDetector::detect_all();
+        // Auto-detect browsers - only consider CDP-capable browsers for automation
+        let browsers = BrowserDetector::detect_cdp_capable();
 
         if browsers.is_empty() {
             return Err(Error::Browser(
-                "No supported browser found. Please install Brave, Chrome, or Chromium.".into(),
+                "No CDP-capable browser found. Please install Brave, Chrome, Chromium, Edge, Opera, or Vivaldi.".into(),
             ));
         }
 
-        // Prefer Brave > Chrome > Chromium > Edge
+        // Prefer Brave > Chrome > Chromium > Edge > Opera > Vivaldi
         let browser = browsers
             .into_iter()
             .min_by_key(|b| match b.browser_type {
@@ -284,6 +284,10 @@ impl Session {
                 BrowserType::Chrome => 1,
                 BrowserType::Chromium => 2,
                 BrowserType::Edge => 3,
+                BrowserType::Opera => 4,
+                BrowserType::Vivaldi => 5,
+                // Firefox and Safari don't support CDP, filtered out by detect_cdp_capable()
+                BrowserType::Firefox | BrowserType::Safari => 99,
             })
             .unwrap();
 

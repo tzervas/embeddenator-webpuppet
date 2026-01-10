@@ -7,6 +7,8 @@ authors = ["Tyler Zervas <tz-dev@vectorweight.com>"]
 description = "Browser automation library for AI provider web interfaces"
 license = "MIT"
 repository = "https://github.com/tzervas/embeddenator-webpuppet"
+documentation = "https://docs.rs/embeddenator-webpuppet"
+readme = "README.md"
 keywords = ["browser-automation", "ai", "puppeteer", "web-scraping"]
 categories = ["web-programming", "development-tools"]
 
