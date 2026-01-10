@@ -1,4 +1,4 @@
-# embeddenator-webpuppet
+# webpuppet
 
 Browser automation library for AI chat web interfaces.
 
@@ -8,7 +8,7 @@ This library provides programmatic control of Chrome/Chromium browsers to intera
 
 ## Overview
 
-`embeddenator-webpuppet` enables automated interactions with AI chat interfaces when API access is unavailable, restricted, or when specific web-only features are needed. The library handles:
+`webpuppet` enables automated interactions with AI chat interfaces when API access is unavailable, restricted, or when specific web-only features are needed. The library handles:
 
 - Browser session management and authentication
 - Rate limiting and anti-detection measures
@@ -31,7 +31,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-embeddenator-webpuppet = { version = "0.1.0-alpha.3", features = ["all-providers"] }
+webpuppet = { version = "0.1.0-alpha.3", features = ["all-providers"] }
 ```
 
 **Note**: This is pre-release software. APIs may change between versions.
@@ -56,7 +56,7 @@ embeddenator-webpuppet = { version = "0.1.0-alpha.3", features = ["all-providers
 ### Basic Prompt
 
 ```rust
-use embeddenator_webpuppet::{WebPuppet, Provider, PromptRequest};
+use webpuppet::{WebPuppet, Provider, PromptRequest};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -86,7 +86,7 @@ async fn main() -> anyhow::Result<()> {
 ### Multi-Provider Query
 
 ```rust
-use embeddenator_webpuppet::{WebPuppet, Provider, PromptRequest};
+use webpuppet::{WebPuppet, Provider, PromptRequest};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -118,7 +118,7 @@ async fn main() -> anyhow::Result<()> {
 ### Conversation Mode
 
 ```rust
-use embeddenator_webpuppet::{WebPuppet, Provider, PromptRequest};
+use webpuppet::{WebPuppet, Provider, PromptRequest};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -176,7 +176,7 @@ puppet.authenticate(Provider::Claude).await?;
 ## Configuration
 
 ```rust
-use embeddenator_webpuppet::{Config, WebPuppet};
+use webpuppet::{Config, WebPuppet};
 use std::time::Duration;
 
 let config = Config::builder()
@@ -227,7 +227,7 @@ Capabilities are declared per provider in code (not runtime UI detection yet). F
 The library includes built-in security screening for AI responses:
 
 ```rust
-use embeddenator_webpuppet::{WebPuppet, Provider, PromptRequest};
+use webpuppet::{WebPuppet, Provider, PromptRequest};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -270,7 +270,7 @@ async fn main() -> anyhow::Result<()> {
 #### Custom Screening Configuration
 
 ```rust
-use embeddenator_webpuppet::{WebPuppet, ScreeningConfig};
+use webpuppet::{WebPuppet, ScreeningConfig};
 
 let config = ScreeningConfig {
     min_visible_font_size: 8.0,  // Stricter than default 6pt
@@ -292,7 +292,7 @@ let puppet = WebPuppet::builder()
 ## Architecture
 
 ```
-embeddenator-webpuppet/
+webpuppet/
 ├── src/
 │   ├── lib.rs          # Main exports
 │   ├── config.rs       # Configuration types

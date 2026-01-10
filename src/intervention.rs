@@ -17,7 +17,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use embeddenator_webpuppet::{WebPuppet, InterventionHandler, InterventionReason};
+//! use webpuppet::{WebPuppet, InterventionHandler, InterventionReason};
 //!
 //! let handler = InterventionHandler::new()
 //!     .with_timeout(Duration::from_secs(300))  // 5 min for captcha

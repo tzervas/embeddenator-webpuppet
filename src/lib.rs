@@ -1,4 +1,4 @@
-//! # embeddenator-webpuppet
+//! # webpuppet
 //!
 //! Browser automation library for AI provider web interfaces.
 //!
@@ -39,7 +39,7 @@
 //! ## Example
 //!
 //! ```rust,ignore
-//! use embeddenator_webpuppet::{WebPuppet, Provider, PromptRequest};
+//! use webpuppet::{WebPuppet, Provider, PromptRequest};
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
