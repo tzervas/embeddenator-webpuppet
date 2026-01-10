@@ -69,9 +69,9 @@ async fn main() -> anyhow::Result<()> {
             }
             "--help" | "-h" => {
                 println!("Research Runner for Embeddenator");
-                println!("");
+                println!();
                 println!("Usage: research_runner [OPTIONS]");
-                println!("");
+                println!();
                 println!("Options:");
                 println!("  -p, --provider <NAME>   Provider: claude, grok, gemini");
                 println!("  --prompt <NAME>         Prompt name (e.g., io-uring, safe-simd)");
@@ -88,7 +88,7 @@ async fn main() -> anyhow::Result<()> {
     println!("   Provider: {}", provider);
     println!("   Prompt: {}", prompt_name);
     println!("   Headless: {}", headless);
-    println!("");
+    println!();
 
     // Load prompt
     let prompt_content = match load_prompt(&prompt_name) {
@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
                 "❌ Failed to load prompt 'research-{}.prompt.md': {}",
                 prompt_name, e
             );
-            eprintln!("");
+            eprintln!();
             eprintln!("Available prompts in .github/prompts/:");
             eprintln!("  - io-uring");
             eprintln!("  - safe-simd");
@@ -141,7 +141,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
     // Report screening results
-    println!("");
+    println!();
     println!("🔒 Security Screening:");
     println!("   Risk Score: {:.2}", screening.risk_score);
     println!("   Passed: {}", screening.passed);
@@ -169,18 +169,18 @@ async fn main() -> anyhow::Result<()> {
 
     let mut file = std::fs::File::create(&output_file)?;
     writeln!(file, "# Research Response: {}", prompt_name)?;
-    writeln!(file, "")?;
+    writeln!(file)?;
     writeln!(file, "**Provider**: {}", provider)?;
     writeln!(file, "**Timestamp**: {}", response.timestamp)?;
     writeln!(file, "**Risk Score**: {:.2}", screening.risk_score)?;
-    writeln!(file, "")?;
+    writeln!(file)?;
     writeln!(file, "---")?;
-    writeln!(file, "")?;
+    writeln!(file)?;
     writeln!(file, "{}", response.text)?;
 
-    println!("");
+    println!();
     println!("💾 Response saved to: {}", output_file.display());
-    println!("");
+    println!();
     println!("📝 Response Preview:");
     println!("─────────────────────────────────────────────");
     // Print first 500 chars

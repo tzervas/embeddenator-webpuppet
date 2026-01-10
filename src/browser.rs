@@ -260,7 +260,8 @@ impl BrowserDetector {
         let data_dirs = [
             dirs::config_dir().map(|d| d.join("BraveSoftware/Brave-Browser")),
             dirs::home_dir().map(|d| d.join(".config/BraveSoftware/Brave-Browser")),
-            dirs::home_dir().map(|d| d.join(".var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser")),
+            dirs::home_dir()
+                .map(|d| d.join(".var/app/com.brave.Browser/config/BraveSoftware/Brave-Browser")),
         ];
 
         Self::detect_browser_generic(BrowserType::Brave, &paths, &data_dirs)
@@ -268,13 +269,10 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_brave() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
-        ];
+        let paths = ["/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/BraveSoftware/Brave-Browser")),
-        ];
+        let data_dirs = [dirs::home_dir()
+            .map(|d| d.join("Library/Application Support/BraveSoftware/Brave-Browser"))];
 
         Self::detect_browser_generic(BrowserType::Brave, &paths, &data_dirs)
     }
@@ -286,9 +284,8 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
         ];
 
-        let data_dirs = [
-            dirs::data_local_dir().map(|d| d.join("BraveSoftware\\Brave-Browser\\User Data")),
-        ];
+        let data_dirs =
+            [dirs::data_local_dir().map(|d| d.join("BraveSoftware\\Brave-Browser\\User Data"))];
 
         Self::detect_browser_generic(BrowserType::Brave, &paths, &data_dirs)
     }
@@ -320,13 +317,10 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_chrome() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        ];
+        let paths = ["/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/Google/Chrome")),
-        ];
+        let data_dirs =
+            [dirs::home_dir().map(|d| d.join("Library/Application Support/Google/Chrome"))];
 
         Self::detect_browser_generic(BrowserType::Chrome, &paths, &data_dirs)
     }
@@ -338,9 +332,7 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
         ];
 
-        let data_dirs = [
-            dirs::data_local_dir().map(|d| d.join("Google\\Chrome\\User Data")),
-        ];
+        let data_dirs = [dirs::data_local_dir().map(|d| d.join("Google\\Chrome\\User Data"))];
 
         Self::detect_browser_generic(BrowserType::Chrome, &paths, &data_dirs)
     }
@@ -371,13 +363,9 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_chromium() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Chromium.app/Contents/MacOS/Chromium",
-        ];
+        let paths = ["/Applications/Chromium.app/Contents/MacOS/Chromium"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/Chromium")),
-        ];
+        let data_dirs = [dirs::home_dir().map(|d| d.join("Library/Application Support/Chromium"))];
 
         Self::detect_browser_generic(BrowserType::Chromium, &paths, &data_dirs)
     }
@@ -389,9 +377,7 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\Chromium\\Application\\chrome.exe",
         ];
 
-        let data_dirs = [
-            dirs::data_local_dir().map(|d| d.join("Chromium\\User Data")),
-        ];
+        let data_dirs = [dirs::data_local_dir().map(|d| d.join("Chromium\\User Data"))];
 
         Self::detect_browser_generic(BrowserType::Chromium, &paths, &data_dirs)
     }
@@ -420,13 +406,10 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_edge() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-        ];
+        let paths = ["/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/Microsoft Edge")),
-        ];
+        let data_dirs =
+            [dirs::home_dir().map(|d| d.join("Library/Application Support/Microsoft Edge"))];
 
         Self::detect_browser_generic(BrowserType::Edge, &paths, &data_dirs)
     }
@@ -438,9 +421,7 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
         ];
 
-        let data_dirs = [
-            dirs::data_local_dir().map(|d| d.join("Microsoft\\Edge\\User Data")),
-        ];
+        let data_dirs = [dirs::data_local_dir().map(|d| d.join("Microsoft\\Edge\\User Data"))];
 
         Self::detect_browser_generic(BrowserType::Edge, &paths, &data_dirs)
     }
@@ -470,13 +451,11 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_opera() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Opera.app/Contents/MacOS/Opera",
-        ];
+        let paths = ["/Applications/Opera.app/Contents/MacOS/Opera"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/com.operasoftware.Opera")),
-        ];
+        let data_dirs =
+            [dirs::home_dir()
+                .map(|d| d.join("Library/Application Support/com.operasoftware.Opera"))];
 
         Self::detect_browser_generic(BrowserType::Opera, &paths, &data_dirs)
     }
@@ -520,13 +499,9 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_vivaldi() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi",
-        ];
+        let paths = ["/Applications/Vivaldi.app/Contents/MacOS/Vivaldi"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/Vivaldi")),
-        ];
+        let data_dirs = [dirs::home_dir().map(|d| d.join("Library/Application Support/Vivaldi"))];
 
         Self::detect_browser_generic(BrowserType::Vivaldi, &paths, &data_dirs)
     }
@@ -538,9 +513,7 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\Vivaldi\\Application\\vivaldi.exe",
         ];
 
-        let data_dirs = [
-            dirs::data_local_dir().map(|d| d.join("Vivaldi\\User Data")),
-        ];
+        let data_dirs = [dirs::data_local_dir().map(|d| d.join("Vivaldi\\User Data"))];
 
         Self::detect_browser_generic(BrowserType::Vivaldi, &paths, &data_dirs)
     }
@@ -573,13 +546,9 @@ impl BrowserDetector {
 
     #[cfg(target_os = "macos")]
     pub fn detect_firefox() -> Option<BrowserInstallation> {
-        let paths = [
-            "/Applications/Firefox.app/Contents/MacOS/firefox",
-        ];
+        let paths = ["/Applications/Firefox.app/Contents/MacOS/firefox"];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("Library/Application Support/Firefox")),
-        ];
+        let data_dirs = [dirs::home_dir().map(|d| d.join("Library/Application Support/Firefox"))];
 
         Self::detect_browser_generic(BrowserType::Firefox, &paths, &data_dirs)
     }
@@ -591,9 +560,7 @@ impl BrowserDetector {
             "C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe",
         ];
 
-        let data_dirs = [
-            dirs::home_dir().map(|d| d.join("AppData\\Roaming\\Mozilla\\Firefox")),
-        ];
+        let data_dirs = [dirs::home_dir().map(|d| d.join("AppData\\Roaming\\Mozilla\\Firefox"))];
 
         Self::detect_browser_generic(BrowserType::Firefox, &paths, &data_dirs)
     }
@@ -610,7 +577,7 @@ impl BrowserDetector {
     #[cfg(target_os = "macos")]
     pub fn detect_safari() -> Option<BrowserInstallation> {
         let safari_path = PathBuf::from("/Applications/Safari.app/Contents/MacOS/Safari");
-        
+
         if safari_path.exists() {
             let version = Self::detect_version(&safari_path);
             Some(BrowserInstallation {
@@ -640,10 +607,7 @@ impl BrowserDetector {
         exec_paths: &[&str],
         data_dirs: &[Option<PathBuf>],
     ) -> Option<BrowserInstallation> {
-        let executable = exec_paths
-            .iter()
-            .map(PathBuf::from)
-            .find(|p| p.exists());
+        let executable = exec_paths.iter().map(PathBuf::from).find(|p| p.exists());
 
         let user_data_dir = data_dirs
             .iter()
@@ -713,7 +677,8 @@ impl BrowserDetector {
 
     #[cfg(target_os = "windows")]
     fn default_data_dir_for_type(browser_type: BrowserType) -> PathBuf {
-        let local = dirs::data_local_dir().unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Local"));
+        let local = dirs::data_local_dir()
+            .unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Local"));
         match browser_type {
             BrowserType::Brave => local.join("BraveSoftware\\Brave-Browser\\User Data"),
             BrowserType::Chrome => local.join("Google\\Chrome\\User Data"),
@@ -723,7 +688,9 @@ impl BrowserDetector {
             BrowserType::Vivaldi => local.join("Vivaldi\\User Data"),
             BrowserType::Firefox => dirs::home_dir()
                 .map(|d| d.join("AppData\\Roaming\\Mozilla\\Firefox"))
-                .unwrap_or_else(|| PathBuf::from("C:\\Users\\Default\\AppData\\Roaming\\Mozilla\\Firefox")),
+                .unwrap_or_else(|| {
+                    PathBuf::from("C:\\Users\\Default\\AppData\\Roaming\\Mozilla\\Firefox")
+                }),
             BrowserType::Safari => PathBuf::from("C:\\dev\\null"), // Safari not on Windows
         }
     }
@@ -944,12 +911,27 @@ mod tests {
     #[test]
     fn test_browser_type_from_str() {
         assert_eq!("brave".parse::<BrowserType>().unwrap(), BrowserType::Brave);
-        assert_eq!("chrome".parse::<BrowserType>().unwrap(), BrowserType::Chrome);
-        assert_eq!("google-chrome".parse::<BrowserType>().unwrap(), BrowserType::Chrome);
-        assert_eq!("firefox".parse::<BrowserType>().unwrap(), BrowserType::Firefox);
-        assert_eq!("safari".parse::<BrowserType>().unwrap(), BrowserType::Safari);
+        assert_eq!(
+            "chrome".parse::<BrowserType>().unwrap(),
+            BrowserType::Chrome
+        );
+        assert_eq!(
+            "google-chrome".parse::<BrowserType>().unwrap(),
+            BrowserType::Chrome
+        );
+        assert_eq!(
+            "firefox".parse::<BrowserType>().unwrap(),
+            BrowserType::Firefox
+        );
+        assert_eq!(
+            "safari".parse::<BrowserType>().unwrap(),
+            BrowserType::Safari
+        );
         assert_eq!("opera".parse::<BrowserType>().unwrap(), BrowserType::Opera);
-        assert_eq!("vivaldi".parse::<BrowserType>().unwrap(), BrowserType::Vivaldi);
+        assert_eq!(
+            "vivaldi".parse::<BrowserType>().unwrap(),
+            BrowserType::Vivaldi
+        );
         assert_eq!("edge".parse::<BrowserType>().unwrap(), BrowserType::Edge);
         assert_eq!("msedge".parse::<BrowserType>().unwrap(), BrowserType::Edge);
     }
@@ -980,7 +962,7 @@ mod tests {
     fn test_all_browser_types() {
         let all = BrowserType::all();
         assert_eq!(all.len(), 8);
-        
+
         let cdp = BrowserType::cdp_supported();
         assert_eq!(cdp.len(), 6);
     }
