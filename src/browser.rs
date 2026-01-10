@@ -653,7 +653,7 @@ impl BrowserDetector {
                 .map(|d| d.join(".mozilla/firefox"))
                 .unwrap_or_else(|| PathBuf::from("~/.mozilla/firefox")),
             // Safari is not available on Linux - return empty path that won't exist
-            BrowserType::Safari => PathBuf::from("/unsupported/safari-not-available-on-linux")
+            BrowserType::Safari => PathBuf::from("/unsupported/safari-not-available-on-linux"),
         }
     }
 
@@ -693,7 +693,9 @@ impl BrowserDetector {
                     PathBuf::from("C:\\Users\\Default\\AppData\\Roaming\\Mozilla\\Firefox")
                 }),
             // Safari is not available on Windows - return empty path that won't exist
-            BrowserType::Safari => PathBuf::from("C:\\Unsupported\\safari-not-available-on-windows")
+            BrowserType::Safari => {
+                PathBuf::from("C:\\Unsupported\\safari-not-available-on-windows")
+            }
         }
     }
 
