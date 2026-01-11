@@ -59,7 +59,7 @@ tracing = "^0.1"
 
 # Security - credential handling  
 keyring = { version = "^3.6", optional = true }
-secrecy = { version = "^0.8" }
+secrecy = { version = "^0.10" }
 
 # Rate limiting
 parking_lot = "^0.12"
