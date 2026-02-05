@@ -15,6 +15,7 @@ use tokio::sync::RwLock;
 use crate::browser::{BrowserDetector, BrowserType};
 use crate::config::Config;
 use crate::credentials::CredentialStore;
+use crate::display::DisplayMode;
 use crate::error::{Error, Result};
 use crate::providers::Provider;
 use crate::security::DataEncryption;
@@ -31,12 +32,12 @@ pub struct Session {
     browser: Arc<Browser>,
     /// The current page
     page: Arc<RwLock<Page>>,
-    /// Secondary browser for monitoring (Dual Head mode)
+    /// Secondary browser for monitoring (Dashboard mode)
     secondary_browser: Option<Arc<Browser>>,
     /// Secondary page for monitoring
     secondary_page: Option<Arc<RwLock<Page>>>,
-    /// Whether browser is visible (non-headless)
-    visible: bool,
+    /// Active display mode for this session
+    display_mode: DisplayMode,
 }
 
 impl Clone for Session {
@@ -51,7 +52,7 @@ impl Clone for Session {
             page: self.page.clone(),
             secondary_browser: self.secondary_browser.clone(),
             secondary_page: self.secondary_page.clone(),
-            visible: self.visible,
+            display_mode: self.display_mode,
         }
     }
 }
@@ -99,11 +100,15 @@ impl Session {
                 has_touch: false,
             });
 
-        // Set headless mode
-        let visible = !config.browser.headless;
-        if visible {
+        // Resolve display mode from config (reconciles legacy fields)
+        let display_mode = config.browser.effective_display_mode();
+
+        // HeadsUp = interactive visible browser, Dashboard = headless primary + visible secondary
+        if !display_mode.is_headless() {
             builder = builder.with_head();
-            tracing::info!("Browser will be visible (non-headless mode)");
+            tracing::info!(mode = %display_mode, "Primary browser will be visible (interactive mode)");
+        } else {
+            tracing::info!(mode = %display_mode, "Primary browser running in headless mode");
         }
 
         // Use existing profile for auth persistence
@@ -160,12 +165,12 @@ impl Session {
             .await
             .map_err(|e| Error::Browser(format!("Failed to create page: {}", e)))?;
 
-        // Handle Dual Head mode
+        // Handle Dashboard mode (secondary monitoring browser)
         let mut secondary_browser = None;
         let mut secondary_page = None;
 
-        if config.browser.dual_head {
-            tracing::info!("Dual Head mode enabled. Launching secondary monitoring browser.");
+        if display_mode.is_dual_head() {
+            tracing::info!("Dashboard mode: launching secondary monitoring browser");
 
             // Re-build config for secondary (visible) browser
             let mut sec_builder = BrowserConfig::builder()
@@ -234,7 +239,7 @@ impl Session {
             page: Arc::new(RwLock::new(page)),
             secondary_browser,
             secondary_page,
-            visible,
+            display_mode,
         })
     }
 
@@ -296,7 +301,12 @@ impl Session {
 
     /// Get whether the browser is visible.
     pub fn is_visible(&self) -> bool {
-        self.visible
+        self.display_mode.has_visible_window()
+    }
+
+    /// Get the display mode for this session.
+    pub fn display_mode(&self) -> DisplayMode {
+        self.display_mode
     }
 
     /// Get the provider for this session.
