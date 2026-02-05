@@ -468,11 +468,7 @@ mod tests {
             .await;
 
         let result = proxy
-            .screen_tool_response(
-                "test",
-                "read_file",
-                "The user's email is user@example.com",
-            )
+            .screen_tool_response("test", "read_file", "The user's email is user@example.com")
             .await;
         assert!(!result.response_result.findings.is_empty());
     }

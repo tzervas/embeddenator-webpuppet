@@ -569,11 +569,113 @@ pub async fn quick_prompt(
 
     puppet.authenticate(provider).await?;
 
-    let response = puppet
-        .prompt(provider, PromptRequest::new(message))
-        .await?;
+    let response = puppet.prompt(provider, PromptRequest::new(message)).await?;
 
     puppet.close().await?;
 
     Ok(response)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::security::detectors::{Detector, Direction};
+    use crate::security::injection::InjectionDetector;
+    use crate::security::pii::PiiDetector;
+
+    #[tokio::test]
+    async fn test_prompt_input_screening_blocks_injection() {
+        // Test that malicious input is blocked by the security pipeline
+        let puppet = WebPuppet::builder()
+            .headless(true)
+            .build()
+            .await
+            .expect("Failed to build WebPuppet");
+
+        // Test with SQL injection attempt
+        let malicious_input = "'; DROP TABLE users; --";
+        let result = puppet
+            .prompt(Provider::Claude, PromptRequest::new(malicious_input))
+            .await;
+
+        // Should return SecurityBlocked error
+        assert!(result.is_err());
+        match result {
+            Err(Error::SecurityBlocked { direction, .. }) => {
+                assert_eq!(direction, "input");
+            }
+            _ => panic!("Expected SecurityBlocked error for input"),
+        }
+    }
+
+    #[test]
+    fn test_security_pipeline_detects_pii() {
+        // Test that PII detection works correctly
+        let detector = PiiDetector::default();
+        let content = "My email is user@example.com and phone is 555-123-4567";
+        let findings = detector.detect(content, Direction::Output);
+
+        assert!(!findings.is_empty());
+        assert!(findings.iter().any(|f| f.category == "email"));
+        assert!(findings.iter().any(|f| f.category == "phone"));
+    }
+
+    #[test]
+    fn test_security_pipeline_detects_injection() {
+        // Test that injection detection works correctly
+        let detector = InjectionDetector::default();
+        let content = "SELECT * FROM users WHERE id = 1 UNION SELECT * FROM passwords";
+        let findings = detector.detect(content, Direction::Input);
+
+        assert!(!findings.is_empty());
+        assert!(findings.iter().any(|f| f.category == "sql_injection"));
+    }
+
+    #[test]
+    fn test_prompt_request_builder() {
+        let mut request = PromptRequest::new("test message").with_context("test context");
+        request.metadata.insert("key".to_string(), "value".to_string());
+
+        assert_eq!(request.message, "test message");
+        assert_eq!(request.context, Some("test context".into()));
+        assert_eq!(request.metadata.get("key"), Some(&"value".to_string()));
+    }
+
+    #[test]
+    fn test_redaction_engine_preserves_positions() {
+        use crate::security::detectors::{Finding, Severity};
+        use crate::security::redaction::redact;
+
+        let content = "Email: user@example.com, SSN: 123-45-6789";
+        let findings = vec![
+            Finding {
+                detector: "pii".into(),
+                category: "email".into(),
+                description: "Email".into(),
+                matched_content: "user@example.com".into(),
+                severity: Severity::High,
+                confidence: 0.9,
+                offset: Some(7),
+                length: Some(16),
+                redaction: Some("u***@***".into()),
+            },
+            Finding {
+                detector: "pii".into(),
+                category: "ssn".into(),
+                description: "SSN".into(),
+                matched_content: "123-45-6789".into(),
+                severity: Severity::Critical,
+                confidence: 0.9,
+                offset: Some(30),
+                length: Some(11),
+                redaction: Some("***-**-****".into()),
+            },
+        ];
+
+        let result = redact(content, &findings);
+        assert!(result.contains("u***@***"));
+        assert!(result.contains("***-**-****"));
+        assert!(!result.contains("user@example.com"));
+        assert!(!result.contains("123-45-6789"));
+    }
 }

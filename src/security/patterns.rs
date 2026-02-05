@@ -156,17 +156,14 @@ pub fn control_characters() -> &'static Regex {
 /// Email address pattern.
 pub fn pii_email() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").unwrap()
-    })
+    PATTERN.get_or_init(|| Regex::new(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}").unwrap())
 }
 
 /// US phone number patterns.
 pub fn pii_phone() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}").unwrap()
-    })
+    PATTERN
+        .get_or_init(|| Regex::new(r"(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}").unwrap())
 }
 
 /// US Social Security Number pattern.
@@ -195,9 +192,7 @@ pub fn pii_ipv4() -> &'static Regex {
 /// IPv6 address pattern.
 pub fn pii_ipv6() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r"(?i)\b(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\b").unwrap()
-    })
+    PATTERN.get_or_init(|| Regex::new(r"(?i)\b(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}\b").unwrap())
 }
 
 /// US street address pattern.
@@ -224,7 +219,10 @@ pub fn secret_aws_access_key() -> &'static Regex {
 /// AWS Secret Access Key pattern.
 pub fn secret_aws_secret_key() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| Regex::new(r#"(?i)(?:aws_secret_access_key|secret_key)\s*[=:]\s*['"]?[A-Za-z0-9/+=]{40}"#).unwrap())
+    PATTERN.get_or_init(|| {
+        Regex::new(r#"(?i)(?:aws_secret_access_key|secret_key)\s*[=:]\s*['"]?[A-Za-z0-9/+=]{40}"#)
+            .unwrap()
+    })
 }
 
 /// Generic API key/token pattern.
@@ -252,25 +250,20 @@ pub fn secret_bearer_token() -> &'static Regex {
 /// Private key header pattern.
 pub fn secret_private_key() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r"-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----").unwrap()
-    })
+    PATTERN.get_or_init(|| Regex::new(r"-----BEGIN\s+(?:RSA\s+)?PRIVATE\s+KEY-----").unwrap())
 }
 
 /// Password in code/config pattern.
 pub fn secret_password() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r#"(?i)(?:password|passwd|pwd)\s*[=:]\s*['"]\S+"#).unwrap()
-    })
+    PATTERN.get_or_init(|| Regex::new(r#"(?i)(?:password|passwd|pwd)\s*[=:]\s*['"]\S+"#).unwrap())
 }
 
 /// Database connection string patterns.
 pub fn secret_database_url() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
-    PATTERN.get_or_init(|| {
-        Regex::new(r#"(?i)(?:mongodb|postgres|mysql|redis)://[^\s'"]+"#).unwrap()
-    })
+    PATTERN
+        .get_or_init(|| Regex::new(r#"(?i)(?:mongodb|postgres|mysql|redis)://[^\s'"]+"#).unwrap())
 }
 
 /// Slack token patterns.
@@ -287,8 +280,7 @@ pub fn secret_slack_token() -> &'static Regex {
 pub fn encoded_base64() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
     PATTERN.get_or_init(|| {
-        Regex::new(r"(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?")
-            .unwrap()
+        Regex::new(r"(?:[A-Za-z0-9+/]{4}){10,}(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?").unwrap()
     })
 }
 

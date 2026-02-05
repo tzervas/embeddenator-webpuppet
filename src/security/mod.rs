@@ -59,7 +59,8 @@ pub use pii::PiiDetector;
 pub use pipeline::{PipelineConfig, PipelineResult, SecurityPipeline};
 pub use proxy::{
     ConnectionStatus, McpResponseScreeningResult, McpScreeningResult, McpSecurityProxy,
-    McpServerConfig, McpServerState, McpToolInfo, McpTransport, ScreeningStats,
+    McpServerConfig, McpServerState, McpToolInfo, McpTransport, PipelineConfigOverride,
+    ScreeningStats,
 };
 pub use redaction::redact;
 pub use screening::{ContentScreener, ScreeningConfig, ScreeningResult, SecurityIssue};

@@ -198,10 +198,7 @@ fn redact_email(email: &str) -> String {
 
 /// Luhn algorithm for credit card validation.
 fn luhn_check(number: &str) -> bool {
-    let digits: Vec<u32> = number
-        .chars()
-        .filter_map(|c| c.to_digit(10))
-        .collect();
+    let digits: Vec<u32> = number.chars().filter_map(|c| c.to_digit(10)).collect();
 
     if digits.len() < 13 || digits.len() > 19 {
         return false;
@@ -243,7 +240,8 @@ mod tests {
     #[test]
     fn test_email_detection() {
         let detector = PiiDetector::default();
-        let findings = detector.detect("Contact us at user@example.com for info", Direction::Output);
+        let findings =
+            detector.detect("Contact us at user@example.com for info", Direction::Output);
         assert!(!findings.is_empty());
         assert_eq!(findings[0].category, "email");
         assert_eq!(findings[0].redaction.as_deref(), Some("u***@***"));
