@@ -201,13 +201,12 @@ impl SecurityPipeline {
         let risk_score = calculate_risk_score(&all_findings);
 
         // Apply redaction if configured
-        let redacted_content = if self.config.auto_redact
-            && all_findings.iter().any(|f| f.redaction.is_some())
-        {
-            Some(redaction::redact(content, &all_findings))
-        } else {
-            None
-        };
+        let redacted_content =
+            if self.config.auto_redact && all_findings.iter().any(|f| f.redaction.is_some()) {
+                Some(redaction::redact(content, &all_findings))
+            } else {
+                None
+            };
 
         // Determine verdict
         let verdict = self.determine_verdict(&all_findings, risk_score);
@@ -337,8 +336,7 @@ mod tests {
     #[test]
     fn test_injection_blocked() {
         let pipeline = SecurityPipeline::new();
-        let result =
-            pipeline.screen_input("'; DROP TABLE users; --");
+        let result = pipeline.screen_input("'; DROP TABLE users; --");
         assert!(!result.findings.is_empty());
     }
 

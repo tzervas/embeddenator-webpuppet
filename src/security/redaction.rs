@@ -38,8 +38,14 @@ pub fn redact(content: &str, findings: &[Finding]) -> String {
     }
 
     // Apply fallback string replacements for findings without offsets
+    // Skip replacements that look like they've already been redacted (contain ***
+    // or are exactly equal to the redaction string itself)
     for (original, redaction) in &fallback_redactions {
-        if !original.is_empty() && !original.starts_with('[') && !original.contains("...") {
+        if !original.is_empty()
+            && !original.contains("***")
+            && original != redaction
+            && result.contains(*original)
+        {
             result = result.replace(*original, redaction);
         }
     }
@@ -91,6 +97,65 @@ mod tests {
     fn test_no_redactions() {
         let content = "This is clean content.";
         let result = redact(content, &[]);
+        assert_eq!(result, content);
+    }
+
+    #[test]
+    fn test_fallback_redaction_with_brackets() {
+        // Test that content starting with '[' is still redacted if it's actually sensitive
+        let content = "Config: [secret_token_abc123] and [password=secret456]";
+        let findings = vec![
+            Finding {
+                detector: "secrets".into(),
+                category: "api_key".into(),
+                description: "API Key".into(),
+                matched_content: "secret_token_abc123".into(),
+                severity: Severity::High,
+                confidence: 0.85,
+                offset: None,
+                length: None,
+                redaction: Some("[REDACTED_TOKEN]".into()),
+            },
+            Finding {
+                detector: "secrets".into(),
+                category: "password".into(),
+                description: "Password".into(),
+                matched_content: "password=secret456".into(),
+                severity: Severity::Critical,
+                confidence: 0.9,
+                offset: None,
+                length: None,
+                redaction: Some("[REDACTED_PASSWORD]".into()),
+            },
+        ];
+
+        let result = redact(content, &findings);
+        assert!(result.contains("[REDACTED_TOKEN]"));
+        assert!(result.contains("[REDACTED_PASSWORD]"));
+        assert!(!result.contains("secret_token_abc123"));
+        assert!(!result.contains("password=secret456"));
+    }
+
+    #[test]
+    fn test_avoid_double_redaction() {
+        // Test that already-redacted content is not redacted again
+        let content = "Email: user@example.com";
+        let findings = vec![
+            Finding {
+                detector: "pii".into(),
+                category: "email".into(),
+                description: "Email".into(),
+                matched_content: "***@***".into(),  // Already redacted in matched_content
+                severity: Severity::High,
+                confidence: 0.9,
+                offset: None,
+                length: None,
+                redaction: Some("[REDACTED]".into()),
+            },
+        ];
+
+        let result = redact(content, &findings);
+        // Should not replace anything because matched_content contains ***
         assert_eq!(result, content);
     }
 }

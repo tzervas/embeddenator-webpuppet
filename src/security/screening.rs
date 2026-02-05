@@ -232,18 +232,62 @@ impl ContentScreener {
 
     fn build_injection_patterns(config: &ScreeningConfig) -> Vec<InjectionPattern> {
         let pattern_defs = vec![
-            (r"(?i)ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)", 0.95, "Direct instruction override attempt"),
-            (r"(?i)disregard\s+(all\s+)?(previous|prior|above)", 0.9, "Instruction disregard attempt"),
-            (r"(?i)new\s+(system\s+)?instructions?:", 0.85, "New instruction injection"),
-            (r"(?i)you\s+are\s+now\s+(a|an|the)", 0.7, "Role reassignment attempt"),
-            (r"(?i)act\s+as\s+(if\s+)?(a|an|the)", 0.6, "Role play instruction"),
-            (r"(?i)\[system\]|\[assistant\]|\[user\]", 0.8, "Message role injection"),
+            (
+                r"(?i)ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|context)",
+                0.95,
+                "Direct instruction override attempt",
+            ),
+            (
+                r"(?i)disregard\s+(all\s+)?(previous|prior|above)",
+                0.9,
+                "Instruction disregard attempt",
+            ),
+            (
+                r"(?i)new\s+(system\s+)?instructions?:",
+                0.85,
+                "New instruction injection",
+            ),
+            (
+                r"(?i)you\s+are\s+now\s+(a|an|the)",
+                0.7,
+                "Role reassignment attempt",
+            ),
+            (
+                r"(?i)act\s+as\s+(if\s+)?(a|an|the)",
+                0.6,
+                "Role play instruction",
+            ),
+            (
+                r"(?i)\[system\]|\[assistant\]|\[user\]",
+                0.8,
+                "Message role injection",
+            ),
             (r"(?i)<<\s*sys(tem)?\s*>>", 0.85, "System prompt marker"),
-            (r"(?i)```\s*(system|prompt|instruction)", 0.75, "Code block instruction injection"),
-            (r#"(?i)(end|close|exit)\s*(of\s*)?(prompt|context|message|conversation)"#, 0.8, "Context boundary manipulation"),
-            (r"(?i)(print|output|reveal|show|display)\s+(the\s+)?(system\s+)?(prompt|instructions?|context)", 0.85, "Prompt exfiltration attempt"),
-            (r"(?i)do\s+anything\s+now|dan\s+mode|developer\s+mode|unlocked\s+mode", 0.95, "Known jailbreak pattern"),
-            (r"(?i)hidden\s+instruction|secret\s+command|covert\s+directive", 0.9, "Hidden instruction reference"),
+            (
+                r"(?i)```\s*(system|prompt|instruction)",
+                0.75,
+                "Code block instruction injection",
+            ),
+            (
+                r#"(?i)(end|close|exit)\s*(of\s*)?(prompt|context|message|conversation)"#,
+                0.8,
+                "Context boundary manipulation",
+            ),
+            (
+                r"(?i)(print|output|reveal|show|display)\s+(the\s+)?(system\s+)?(prompt|instructions?|context)",
+                0.85,
+                "Prompt exfiltration attempt",
+            ),
+            (
+                r"(?i)do\s+anything\s+now|dan\s+mode|developer\s+mode|unlocked\s+mode",
+                0.95,
+                "Known jailbreak pattern",
+            ),
+            (
+                r"(?i)hidden\s+instruction|secret\s+command|covert\s+directive",
+                0.9,
+                "Hidden instruction reference",
+            ),
         ];
 
         let mut patterns: Vec<InjectionPattern> = pattern_defs

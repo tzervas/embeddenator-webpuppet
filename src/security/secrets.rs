@@ -278,9 +278,8 @@ fn is_secret_like(s: &str) -> bool {
     let has_upper = s.chars().any(|c| c.is_ascii_uppercase());
     let has_lower = s.chars().any(|c| c.is_ascii_lowercase());
     let has_digit = s.chars().any(|c| c.is_ascii_digit());
-    let mostly_alnum = s.chars().filter(|c| c.is_ascii_alphanumeric()).count() as f64
-        / s.len() as f64
-        > 0.7;
+    let mostly_alnum =
+        s.chars().filter(|c| c.is_ascii_alphanumeric()).count() as f64 / s.len() as f64 > 0.7;
 
     // Must have at least 2 character classes and be mostly alphanumeric
     let classes = has_upper as u8 + has_lower as u8 + has_digit as u8;

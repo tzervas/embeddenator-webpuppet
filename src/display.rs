@@ -61,7 +61,6 @@ impl DisplayMode {
     }
 }
 
-
 impl fmt::Display for DisplayMode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -78,9 +77,7 @@ impl std::str::FromStr for DisplayMode {
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "headless" => Ok(DisplayMode::Headless),
-            "heads-up" | "headsup" | "heads_up" | "visible" | "headed" => {
-                Ok(DisplayMode::HeadsUp)
-            }
+            "heads-up" | "headsup" | "heads_up" | "visible" | "headed" => Ok(DisplayMode::HeadsUp),
             "dashboard" | "dual-head" | "dual_head" | "dualhead" | "monitor" => {
                 Ok(DisplayMode::Dashboard)
             }
@@ -130,11 +127,26 @@ mod tests {
 
     #[test]
     fn test_parse_display_mode() {
-        assert_eq!("headless".parse::<DisplayMode>().unwrap(), DisplayMode::Headless);
-        assert_eq!("heads-up".parse::<DisplayMode>().unwrap(), DisplayMode::HeadsUp);
-        assert_eq!("visible".parse::<DisplayMode>().unwrap(), DisplayMode::HeadsUp);
-        assert_eq!("dashboard".parse::<DisplayMode>().unwrap(), DisplayMode::Dashboard);
-        assert_eq!("dual-head".parse::<DisplayMode>().unwrap(), DisplayMode::Dashboard);
+        assert_eq!(
+            "headless".parse::<DisplayMode>().unwrap(),
+            DisplayMode::Headless
+        );
+        assert_eq!(
+            "heads-up".parse::<DisplayMode>().unwrap(),
+            DisplayMode::HeadsUp
+        );
+        assert_eq!(
+            "visible".parse::<DisplayMode>().unwrap(),
+            DisplayMode::HeadsUp
+        );
+        assert_eq!(
+            "dashboard".parse::<DisplayMode>().unwrap(),
+            DisplayMode::Dashboard
+        );
+        assert_eq!(
+            "dual-head".parse::<DisplayMode>().unwrap(),
+            DisplayMode::Dashboard
+        );
         assert!("invalid".parse::<DisplayMode>().is_err());
     }
 }
