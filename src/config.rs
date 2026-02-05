@@ -4,8 +4,12 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::time::Duration;
 
+use crate::display::DisplayMode;
+use crate::security::pipeline::PipelineConfig;
+use crate::security::proxy::McpServerConfig;
+
 /// Main configuration for WebPuppet.
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Config {
     /// Browser configuration.
     pub browser: BrowserConfig,
@@ -15,12 +19,38 @@ pub struct Config {
     pub session: SessionConfig,
     /// Rate limiting settings.
     pub rate_limit: RateLimitConfig,
+    /// Security pipeline configuration.
+    pub security: SecurityConfig,
+}
+
+/// Unified security configuration.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecurityConfig {
+    /// Security pipeline settings.
+    #[serde(flatten)]
+    pub pipeline: PipelineConfig,
+    /// MCP servers to proxy through the security layer.
+    pub mcp_servers: Vec<McpServerConfig>,
+    /// Whether screening is mandatory (cannot be disabled at runtime).
+    pub enforce_screening: bool,
+}
+
+impl Default for SecurityConfig {
+    fn default() -> Self {
+        Self {
+            pipeline: PipelineConfig::default(),
+            mcp_servers: Vec::new(),
+            enforce_screening: true, // Security is mandatory by default
+        }
+    }
 }
 
 /// Browser-specific configuration.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BrowserConfig {
-    /// Run browser in headless mode.
+    /// Display mode for the browser.
+    pub display_mode: DisplayMode,
+    /// Run browser in headless mode (legacy, prefer display_mode).
     pub headless: bool,
     /// Path to browser executable (auto-detect if None).
     pub executable_path: Option<PathBuf>,
@@ -40,12 +70,14 @@ pub struct BrowserConfig {
     /// Sandbox mode (disable for containers).
     pub sandbox: bool,
     /// Dual-head mode: launches a visible monitoring window alongside headless automation.
+    /// Legacy field -- prefer `display_mode: Dashboard`.
     pub dual_head: bool,
 }
 
 impl Default for BrowserConfig {
     fn default() -> Self {
         Self {
+            display_mode: DisplayMode::Headless,
             headless: true,
             executable_path: None,
             user_data_dir: None,
@@ -60,6 +92,19 @@ impl Default for BrowserConfig {
             devtools: false,
             sandbox: true,
             dual_head: false,
+        }
+    }
+}
+
+impl BrowserConfig {
+    /// Resolve the effective display mode, reconciling legacy fields.
+    pub fn effective_display_mode(&self) -> DisplayMode {
+        if self.dual_head {
+            DisplayMode::Dashboard
+        } else if !self.headless {
+            DisplayMode::HeadsUp
+        } else {
+            self.display_mode
         }
     }
 }
@@ -382,9 +427,22 @@ pub struct ConfigBuilder {
 }
 
 impl ConfigBuilder {
-    /// Set headless mode.
+    /// Set headless mode (legacy, prefer `display_mode`).
     pub fn headless(mut self, headless: bool) -> Self {
         self.config.browser.headless = headless;
+        if headless {
+            self.config.browser.display_mode = DisplayMode::Headless;
+        } else {
+            self.config.browser.display_mode = DisplayMode::HeadsUp;
+        }
+        self
+    }
+
+    /// Set display mode.
+    pub fn display_mode(mut self, mode: DisplayMode) -> Self {
+        self.config.browser.display_mode = mode;
+        self.config.browser.headless = mode.is_headless();
+        self.config.browser.dual_head = mode.is_dual_head();
         self
     }
 
@@ -428,6 +486,18 @@ impl ConfigBuilder {
     /// Set rate limit.
     pub fn rate_limit(mut self, requests_per_minute: u32) -> Self {
         self.config.rate_limit.requests_per_minute = requests_per_minute;
+        self
+    }
+
+    /// Set security pipeline configuration.
+    pub fn security(mut self, config: PipelineConfig) -> Self {
+        self.config.security.pipeline = config;
+        self
+    }
+
+    /// Add an MCP server for security proxying.
+    pub fn mcp_server(mut self, server: McpServerConfig) -> Self {
+        self.config.security.mcp_servers.push(server);
         self
     }
 

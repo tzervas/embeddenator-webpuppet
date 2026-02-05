@@ -1,10 +1,30 @@
 //! # webpuppet
 //!
-//! Browser automation library for AI provider web interfaces.
+//! Browser automation library for AI provider web interfaces with integrated
+//! security pipeline.
 //!
 //! This crate provides programmatic control of Chromium-based browsers to interact
 //! with AI chat providers through their web UIs. It handles authentication, session
-//! management, and response extraction for research and development workflows.
+//! management, response extraction, and **mandatory security screening** for
+//! research and development workflows.
+//!
+//! ## Security Architecture
+//!
+//! All content flows through a unified security pipeline by default:
+//! - **Input screening**: SQL injection, command injection, XSS, path traversal,
+//!   LDAP, XXE, SSTI, prompt injection, and control character detection
+//! - **Output screening**: PII detection (email, phone, SSN, credit card, IP),
+//!   secrets detection (AWS keys, GitHub tokens, JWT, private keys, database URLs),
+//!   and content manipulation detection (zero-width chars, hidden HTML, homoglyphs)
+//! - **MCP proxy**: Stateful connections to downstream MCP servers with enforced
+//!   security screening on all tool calls and responses
+//! - **Redaction**: Automatic masking of sensitive data in content
+//!
+//! ## Display Modes
+//!
+//! - **Headless**: No visible browser UI (default, for automation)
+//! - **HeadsUp**: Interactive popup browser window for observation and intervention
+//! - **Dashboard**: Full monitoring with dual-head browsers for security review
 //!
 //! ## Supported Browsers
 //!
@@ -15,45 +35,24 @@
 //!
 //! **Cross-platform**: Linux, macOS, Windows (including Flatpak/Snap on Linux)
 //!
-//! ## Features
-//!
-//! - **Multi-provider support**: Claude, Grok, Gemini, ChatGPT, Perplexity, NotebookLM, Kaggle
-//! - **Browser automation**: CDP (Chrome DevTools Protocol) via chromiumoxide
-//! - **Browser detection**: Automatic detection with platform-specific paths
-//! - **Session persistence**: Secure credential and cookie storage with AES-256-GCM
-//! - **Rate limiting**: Configurable request throttling with humanized delays
-//! - **Content security**: Response screening for security threats
-//! - **Permission controls**: Domain allowlisting and operation restrictions
-//!
-//! ## Security Considerations
-//!
-//! ⚠️ **IMPORTANT**: This library automates third-party web interfaces. Users must
-//! comply with provider terms of service and applicable laws.
-//!
-//! - Credentials stored in OS keyring with AES-256-GCM encryption (never plaintext)
-//! - Browser profiles sandboxed per provider
-//! - Rate limiting prevents abuse detection
-//! - All automation is local (no external API calls)
-//! - Permission controls block unauthorized operations
-//!
 //! ## Example
 //!
 //! ```rust,ignore
-//! use webpuppet::{WebPuppet, Provider, PromptRequest};
+//! use webpuppet::{WebPuppet, Provider, PromptRequest, DisplayMode};
 //!
 //! #[tokio::main]
 //! async fn main() -> anyhow::Result<()> {
-//!     let puppet = WebPuppet::new()
+//!     let puppet = WebPuppet::builder()
 //!         .with_provider(Provider::Claude)
-//!         .headless(true)
+//!         .display_mode(DisplayMode::HeadsUp) // Interactive browser
 //!         .build()
 //!         .await?;
 //!
-//!     let response = puppet.prompt(PromptRequest {
-//!         message: "Explain io_uring async I/O in Rust".into(),
-//!         context: Some("Focus on memory safety".into()),
-//!         ..Default::default()
-//!     }).await?;
+//!     // Input is screened for injection; output is screened for PII/secrets
+//!     let response = puppet.prompt(
+//!         Provider::Claude,
+//!         PromptRequest::new("Explain io_uring async I/O in Rust"),
+//!     ).await?;
 //!
 //!     println!("Response: {}", response.text);
 //!     Ok(())
@@ -66,6 +65,7 @@
 pub mod browser;
 pub mod config;
 pub mod credentials;
+pub mod display;
 pub mod error;
 pub mod intervention;
 pub mod permissions;
@@ -78,6 +78,7 @@ pub mod session;
 pub use browser::{BrowserDetector, BrowserInstallation, BrowserLaunchConfig, BrowserType};
 pub use config::Config;
 pub use credentials::CredentialStore;
+pub use display::DisplayMode;
 pub use error::{Error, Result};
 pub use intervention::{
     InterventionConfig, InterventionDetector, InterventionHandler, InterventionReason,
@@ -87,5 +88,9 @@ pub use permissions::{Operation, PermissionDecision, PermissionGuard, Permission
 pub use providers::{Provider, ProviderTrait};
 pub use puppet::{PromptRequest, PromptResponse, WebPuppet};
 pub use ratelimit::RateLimiter;
-pub use security::{ContentScreener, ScreeningConfig, ScreeningResult, SecurityIssue};
+pub use security::screening::{ContentScreener, ScreeningConfig, ScreeningResult, SecurityIssue};
+pub use security::{
+    Direction, Finding, McpSecurityProxy, PipelineConfig, PipelineResult, SecurityPipeline,
+    Severity, Verdict,
+};
 pub use session::Session;

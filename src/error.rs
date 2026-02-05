@@ -108,6 +108,17 @@ pub enum Error {
     #[error("intervention timed out after {0}s")]
     InterventionTimeout(u64),
 
+    /// Content blocked by security pipeline.
+    #[error("security blocked ({direction}): {findings} finding(s), risk={risk_score:.2}")]
+    SecurityBlocked {
+        /// Direction of the blocked content (input/output).
+        direction: String,
+        /// Number of findings.
+        findings: usize,
+        /// Aggregate risk score.
+        risk_score: f32,
+    },
+
     /// Internal error.
     #[error("internal error: {0}")]
     Internal(String),
